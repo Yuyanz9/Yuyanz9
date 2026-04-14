@@ -18,7 +18,7 @@
   <img alt="Microsoft 365" src="https://img.shields.io/badge/Microsoft%20365-D83B01?style=flat-square&logo=microsoft&logoColor=white" />
   <img alt="Windows Server" src="https://img.shields.io/badge/Windows%20Server-0078D6?style=flat-square&logo=windows&logoColor=white" />
   <img alt="Entra ID" src="https://img.shields.io/badge/Entra%20ID-0078D4?style=flat-square&logo=microsoftazure&logoColor=white" />
-  <img alt="Intune" src="https://img.shields.io/badge/Intune-0078D4?style=flat-square&logo=microsoft&logoColor=white" />
+  <img alt="GitHub Copilot" src="https://img.shields.io/badge/Intune-0078D4?style=flat-square&logo=microsoft&logoColor=white" />
   <img alt="PowerShell" src="https://img.shields.io/badge/PowerShell-5391FE?style=flat-square&logo=powershell&logoColor=white" />
   <img alt="Bicep" src="https://img.shields.io/badge/Bicep-0078D4?style=flat-square&logo=microsoftazure&logoColor=white" />
 </p>
