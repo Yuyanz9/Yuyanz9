@@ -1,6 +1,3 @@
-
----
-
 ### 🧑‍💻 About Me
 
 - 🏆 **Microsoft MVP** — Azure
@@ -22,19 +19,6 @@
   <img alt="PowerShell" src="https://img.shields.io/badge/PowerShell-5391FE?style=flat-square&logo=powershell&logoColor=white" />
   <img alt="Bicep" src="https://img.shields.io/badge/Bicep-0078D4?style=flat-square&logo=microsoftazure&logoColor=white" />
 </p>
-
----
-
-### 📊 GitHub Stats
-
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://github-readme-stats.vercel.app/api?username=Yuyanz9&show_icons=true&theme=dark&hide_border=true&include_all_commits=true&bg_color=00000000" />
-    <source media="(prefers-color-scheme: light)" srcset="https://github-readme-stats.vercel.app/api?username=Yuyanz9&show_icons=true&theme=default&hide_border=true&include_all_commits=true" />
-    <img height="180" src="https://github-readme-stats.vercel.app/api?username=Yuyanz9&show_icons=true&theme=dark&hide_border=true&include_all_commits=true&bg_color=00000000" alt="GitHub Stats" />
-  </picture>
-</p>
-
 ---
 
 ### 🏃 Activity
