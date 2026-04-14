@@ -1,6 +1,3 @@
-<a href="https://github.com/Yuyanz9">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=28&duration=4000&pause=1000&color=FFFFFF&background=00000000&center=true&vCenter=true&multiline=true&width=600&height=80&lines=Hi,+I'm+Yuyanz9;Microsoft+MVP+%7C+Azure+Virtual+Desktop" alt="Typing SVG" />
-</a>
 
 ---
 
@@ -37,6 +34,30 @@
     <img height="180" src="https://github-readme-stats.vercel.app/api?username=Yuyanz9&show_icons=true&theme=dark&hide_border=true&include_all_commits=true&bg_color=00000000" alt="GitHub Stats" />
   </picture>
 </p>
+
+---
+
+### 🏃 Activity
+
+#### 📅 Upcoming
+
+| Date | Event | Role |
+|------|-------|------|
+| 2026-04-17 | [【Global Azure】第3回 JAZUG Fukuoka](https://jazug.connpass.com/event/384711/) | 運営 |
+| 2026-04-18 | [【YonaAz番外編】Microsoft 365 を触って学ぶ！環境"まるごと"お持ち帰りハンズオン](https://yonayona.connpass.com/event/388268/) | 主催 |
+| 2026-04-24 | [AI Dev Day in Fukuoka](https://azureai.connpass.com/event/382334/) | **登壇** |
+| 2026-04-30 | [YonaYona Entra ID Night](https://yonayona.connpass.com/event/388171/) | 主催 |
+| 2026-05-15 | [YonaYona SRE Agentを学ぶ会](https://yonayona.connpass.com/event/389895/) | 主催 |
+
+#### 📚 Recent Archive
+
+| Date | Event | Role |
+|------|-------|------|
+| 2026-03-27 | [YonaYona Azureをゆるっと学ぶ会](https://yonayona.connpass.com/event/386205/) | 主催 |
+| 2026-03-13 | [Cursor Meetup Fukuoka #2](https://aiau.connpass.com/event/384755/) | 運営 |
+| 2026-03-05 | [YonaYona Azureをゆるっと学ぶ会](https://yonayona.connpass.com/event/383870/) | 主催 |
+
+➡️ [過去の活動一覧はこちら](https://yuyanz9.github.io/archives/)
 
 ---
 
