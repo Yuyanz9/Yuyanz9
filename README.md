@@ -43,7 +43,10 @@
 ### 📝 Recent Blog Posts
 
 <!-- BLOG-POST-LIST:START -->
-<!-- BLOG-POST-LIST:END -->
+- [【M365 Copilot】GitHub Copilotで気づいた「AIとの付き合い方」は、M365でも同じだった](https://qiita.com/yuyanz/items/fd44da66ebb8860d0750)
+- [【M365 Copilot】Teamsでチャットするだけで進捗管理ができた話](https://qiita.com/yuyanz/items/5d2087dd5500d0689d7e)
+- [Azure Virtual Desktop（AVD）のコストを抑える7つの方法](https://qiita.com/yuyanz/items/236df61c2b9a890c481c)
+- [YonaYona Azure Clubの裏側](https://qiita.com/yuyanz/items/124b931ea1520b24eb15)<!-- BLOG-POST-LIST:END -->
 
 ---
 
