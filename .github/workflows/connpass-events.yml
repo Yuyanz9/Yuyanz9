@@ -1,0 +1,40 @@
+name: Weekly connpass activity workflow
+
+on:
+  schedule:
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+
+jobs:
+  update-readme-with-connpass:
+    name: Update this repo's README with connpass activity
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      CONNPASS_NICKNAME: yuyanz
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Update README activity from connpass
+        env:
+          CONNPASS_API_KEY: ${{ secrets.CONNPASS_API_KEY }}
+        run: node .github/scripts/update-connpass-events.mjs
+
+      - name: Commit and push changes
+        run: |
+          if git diff --quiet README.md; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "chore(readme): update connpass activity"
+          git push

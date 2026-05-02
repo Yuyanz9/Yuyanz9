@@ -1,0 +1,50 @@
+{
+    "ownerEvents": [
+        {
+            "id": 1001,
+            "title": "Future owner event",
+            "url": "https://yonayona.connpass.com/event/1001/",
+            "started_at": "2099-05-12T19:00:00+09:00",
+            "updated_at": "2099-05-01T08:00:00+09:00",
+            "group": {
+                "title": "YonaYona Azure Club",
+                "url": "https://yonayona.connpass.com/"
+            }
+        },
+        {
+            "id": 1002,
+            "title": "Past owner event",
+            "url": "https://yonayona.connpass.com/event/1002/",
+            "started_at": "2026-04-01T19:00:00+09:00",
+            "updated_at": "2026-04-02T08:00:00+09:00",
+            "group": {
+                "title": "YonaYona Azure Club",
+                "url": "https://yonayona.connpass.com/"
+            }
+        }
+    ],
+    "presenterEvents": [
+        {
+            "id": 1002,
+            "title": "Past owner event",
+            "url": "https://yonayona.connpass.com/event/1002/",
+            "started_at": "2026-04-01T19:00:00+09:00",
+            "updated_at": "2026-04-03T08:00:00+09:00",
+            "group": {
+                "title": "YonaYona Azure Club",
+                "url": "https://yonayona.connpass.com/"
+            }
+        },
+        {
+            "id": 1003,
+            "title": "Past presenter event",
+            "url": "https://azureai.connpass.com/event/1003/",
+            "started_at": "2026-03-10T19:00:00+09:00",
+            "updated_at": "2026-03-11T08:00:00+09:00",
+            "group": {
+                "title": "Azure AI",
+                "url": "https://azureai.connpass.com/"
+            }
+        }
+    ]
+}

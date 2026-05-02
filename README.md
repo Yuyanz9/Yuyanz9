@@ -25,21 +25,25 @@
 
 #### 📅 Upcoming
 
-| Date | Event | Role |
-|------|-------|------|
-| 2026-04-30 | [YonaYona Entra ID Night](https://yonayona.connpass.com/event/388171/) | 主催 |
-| 2026-05-15 | [YonaYona SRE Agentを学ぶ会](https://yonayona.connpass.com/event/389895/) | 主催 |
+<!-- CONNPASS-UPCOMING:START -->
+| Date | Event | Community |
+|------|-------|-----------|
+| 2026-05-15 | [YonaYona SRE Agentを学ぶ会](https://yonayona.connpass.com/event/389895/) | [YonaYona Azure Club](https://yonayona.connpass.com/) |
+<!-- CONNPASS-UPCOMING:END -->
 
 #### 📚 Recent Archive
 
-| Date | Event | Role |
-|------|-------|------|
-| 2026-04-24 | [AI Dev Day in Fukuoka](https://azureai.connpass.com/event/382334/) | **登壇** |
-| 2026-04-18 | [【YonaAz番外編】Microsoft 365 を触って学ぶ！環境"まるごと"お持ち帰りハンズオン](https://yonayona.connpass.com/event/388268/) | 主催 |
-| 2026-04-17 | [【Global Azure】第3回 JAZUG Fukuoka](https://jazug.connpass.com/event/384711/) | 運営 |
-| 2026-03-27 | [YonaYona Azureをゆるっと学ぶ会](https://yonayona.connpass.com/event/386205/) | 主催 |
-| 2026-03-13 | [Cursor Meetup Fukuoka #2](https://aiau.connpass.com/event/384755/) | 運営 |
-| 2026-03-05 | [YonaYona Azureをゆるっと学ぶ会](https://yonayona.connpass.com/event/383870/) | 主催 |
+<!-- CONNPASS-ARCHIVE:START -->
+| Date | Event | Community |
+|------|-------|-----------|
+| 2026-04-30 | [YonaYona Entra ID Night](https://yonayona.connpass.com/event/388171/) | [YonaYona Azure Club](https://yonayona.connpass.com/) |
+| 2026-04-24 | [AI Dev Day in Fukuoka](https://azureai.connpass.com/event/382334/) | [Azure AI](https://azureai.connpass.com/) |
+| 2026-04-18 | [【YonaAz番外編】Microsoft 365 を触って学ぶ！環境"まるごと"お持ち帰りハンズオン](https://yonayona.connpass.com/event/388268/) | [YonaYona Azure Club](https://yonayona.connpass.com/) |
+| 2026-04-17 | [【Global Azure】第3回 JAZUG Fukuoka](https://jazug.connpass.com/event/384711/) | [JAZUG](https://jazug.connpass.com/) |
+| 2026-03-27 | [YonaYona Azureをゆるっと学ぶ会](https://yonayona.connpass.com/event/386205/) | [YonaYona Azure Club](https://yonayona.connpass.com/) |
+| 2026-03-13 | [Cursor Meetup Fukuoka #2](https://aiau.connpass.com/event/384755/) | [AIAU](https://aiau.connpass.com/) |
+| 2026-03-05 | [YonaYona Azureをゆるっと学ぶ会](https://yonayona.connpass.com/event/383870/) | [YonaYona Azure Club](https://yonayona.connpass.com/) |
+<!-- CONNPASS-ARCHIVE:END -->
 
 ➡️ [過去の活動一覧はこちら](https://yuyanz9.github.io/archives/)
 

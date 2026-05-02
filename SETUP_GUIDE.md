@@ -71,9 +71,22 @@ feed_list: "https://qiita.com/YOUR_QIITA_USERNAME/feed"
 
 ---
 
-### 4. GitHub Actions の権限を設定する
+### 4. connpass API を設定する
 
-ブログ記事の自動取得ワークフローが README を更新（コミット・プッシュ）するために、書き込み権限が必要です。
+Activity セクションは GitHub Actions から connpass API v2 を呼び出して、週1で自動更新します。
+
+1. connpass で API 利用申請を行い、API キーを取得する
+2. GitHub リポジトリの **Settings** → **Secrets and variables** → **Actions** に移動する
+3. **New repository secret** で `CONNPASS_API_KEY` を追加する
+4. 必要なら `.github/workflows/connpass-events.yml` 内の `CONNPASS_NICKNAME` を自分の connpass ニックネームに変更する
+
+> ワークフローは毎週月曜 0:00 UTC（日本時間 9:00）に実行されます。
+
+---
+
+### 5. GitHub Actions の権限を設定する
+
+ブログ記事と connpass の自動取得ワークフローが README を更新（コミット・プッシュ）するために、書き込み権限が必要です。
 
 1. リポジトリの **Settings** → **Actions** → **General** に移動
 2. **Workflow permissions** セクションで **Read and write permissions** を選択
@@ -81,14 +94,22 @@ feed_list: "https://qiita.com/YOUR_QIITA_USERNAME/feed"
 
 ---
 
-### 5. ワークフローを初回実行する
+### 6. ワークフローを初回実行する
 
 1. リポジトリの **Actions** タブに移動
 2. 左サイドバーから「**Latest blog post workflow**」を選択
 3. **Run workflow** → **Run workflow** をクリック
 4. 完了後、README.md の `BLOG-POST-LIST` セクションに Qiita の最新記事が挿入されていることを確認
 
+続けて connpass 用ワークフローも実行します。
+
+1. 左サイドバーから「**Weekly connpass activity workflow**」を選択
+2. **Run workflow** → **Run workflow** をクリック
+3. 完了後、README.md の `CONNPASS-UPCOMING` と `CONNPASS-ARCHIVE` セクションが更新されていることを確認
+
 > 以降は毎日 0:00 UTC（日本時間 9:00）に自動実行されます。
+
+> connpass 側は毎週月曜 0:00 UTC（日本時間 9:00）に自動実行されます。
 
 ---
 
