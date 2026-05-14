@@ -29,6 +29,7 @@
 | Date | Event | Community |
 |------|-------|-----------|
 | 2026-05-15 | [YonaYona SRE Agentを学ぶ会](https://yonayona.connpass.com/event/389895/) | [YonaYona Azure Club](https://yonayona.connpass.com/) |
+| 2026-05-29 | [YonaYona Azure LT 会](https://yonayona.connpass.com/event/392577/) | [YonaYona Azure Club](https://yonayona.connpass.com/) |
 <!-- CONNPASS-UPCOMING:END -->
 
 #### 📚 Recent Archive
