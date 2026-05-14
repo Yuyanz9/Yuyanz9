@@ -13,6 +13,7 @@ jobs:
       contents: write
     env:
       CONNPASS_NICKNAME: yuyanz
+      DOCSWELL_USERNAME: yuyanz
     steps:
       - uses: actions/checkout@v4
 

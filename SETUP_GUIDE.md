@@ -73,12 +73,13 @@ feed_list: "https://qiita.com/YOUR_QIITA_USERNAME/feed"
 
 ### 4. connpass API を設定する
 
-Activity セクションは GitHub Actions から connpass API v2 を呼び出して、週1で自動更新します。
+Activity セクションは GitHub Actions から connpass API v2 と Docswell の RSS feed を参照して、週1で自動更新します。
 
 1. connpass で API 利用申請を行い、API キーを取得する
 2. GitHub リポジトリの **Settings** → **Secrets and variables** → **Actions** に移動する
 3. **New repository secret** で `CONNPASS_API_KEY` を追加する
 4. 必要なら `.github/workflows/connpass-events.yml` 内の `CONNPASS_NICKNAME` を自分の connpass ニックネームに変更する
+5. Docswell のユーザー名が connpass ニックネームと異なる場合は、同じく `.github/workflows/connpass-events.yml` 内の `DOCSWELL_USERNAME` を自分の Docswell ユーザー名に変更する
 
 > ワークフローは毎週月曜 0:00 UTC（日本時間 9:00）に実行されます。
 

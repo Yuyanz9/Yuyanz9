@@ -4,22 +4,28 @@ import process from "node:process";
 
 const README_PATH = path.resolve(process.env.README_PATH ?? "README.md");
 const FIXTURE_FILE = process.env.CONNPASS_FIXTURE_FILE?.trim();
+const DOCSWELL_FEED_FILE = process.env.DOCSWELL_FEED_FILE?.trim();
 const CONNPASS_API_KEY = process.env.CONNPASS_API_KEY?.trim();
 const CONNPASS_NICKNAME = process.env.CONNPASS_NICKNAME?.trim();
 const API_BASE_URL = "https://connpass.com/api/v2";
 const API_PAGE_SIZE = 100;
 const JST_TIME_ZONE = "Asia/Tokyo";
 const API_REQUEST_INTERVAL_MS = 1100;
+const DOCSWELL_MATCH_WINDOW_DAYS = 7;
+const MATERIAL_LINK_LABEL = "資料";
+const MATERIAL_EMPTY_CELL = "-";
+const DOCSWELL_FEED_URL = buildDocswellFeedUrl();
 
 let lastRequestAt = 0;
 
 async function main() {
     const readme = await readFile(README_PATH, "utf8");
-    const { ownerEvents, presenterEvents } = FIXTURE_FILE
-        ? await loadFixture(FIXTURE_FILE)
-        : await fetchConnpassEvents();
+    const [{ ownerEvents, presenterEvents }, materialCatalog] = await Promise.all([
+        FIXTURE_FILE ? loadFixture(FIXTURE_FILE) : fetchConnpassEvents(),
+        loadDocswellCatalog(),
+    ]);
 
-    const events = mergeEvents(ownerEvents, presenterEvents);
+    const events = attachMaterials(mergeEvents(ownerEvents, presenterEvents), materialCatalog);
     const { upcomingEvents, archivedEvents } = splitEvents(events, new Date());
 
     const updatedReadme = replaceSection(
@@ -80,6 +86,35 @@ async function fetchConnpassEvents() {
     });
 
     return { ownerEvents, presenterEvents };
+}
+
+async function loadDocswellCatalog() {
+    if (DOCSWELL_FEED_FILE) {
+        const fixturePath = path.resolve(DOCSWELL_FEED_FILE);
+        const rawFeed = await readFile(fixturePath, "utf8");
+        return parseDocswellFeed(rawFeed);
+    }
+
+    if (!DOCSWELL_FEED_URL) {
+        return createEmptyMaterialCatalog();
+    }
+
+    try {
+        const response = await fetch(DOCSWELL_FEED_URL, {
+            headers: {
+                "User-Agent": "Yuyanz9-README-Connpass-Sync",
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`Docswell feed request failed: ${response.status} ${response.statusText}`.trim());
+        }
+
+        return parseDocswellFeed(await response.text());
+    } catch (error) {
+        console.warn(`Skipping Docswell material sync: ${error instanceof Error ? error.message : String(error)}`);
+        return createEmptyMaterialCatalog();
+    }
 }
 
 async function fetchPaginatedEvents(buildUrl) {
@@ -159,6 +194,28 @@ function mergeEvents(ownerEvents, presenterEvents) {
     return Array.from(mergedEvents.values());
 }
 
+function attachMaterials(events, materialCatalog) {
+    const usedMaterialUrls = new Set();
+
+    return events.map((event) => {
+        const directMaterial = materialCatalog.eventMaterials.get(normalizeConnpassEventUrl(event.url));
+        const fallbackMaterial = directMaterial
+            ? null
+            : findFallbackMaterial(event, materialCatalog.fallbackSlides, usedMaterialUrls);
+        const material = directMaterial ?? fallbackMaterial;
+
+        if (material?.materialUrl) {
+            usedMaterialUrls.add(material.materialUrl);
+        }
+
+        return {
+            ...event,
+            materialTitle: material?.title ?? "",
+            materialUrl: material?.materialUrl ?? "",
+        };
+    });
+}
+
 function resolveCommunity(event) {
     const groupTitle = typeof event.group?.title === "string" ? event.group.title.trim() : "";
     const groupUrl = typeof event.group?.url === "string" ? event.group.url : "";
@@ -218,18 +275,248 @@ function renderTable(events, emptyMessage) {
     }
 
     const header = [
-        "| Date | Event | Community |",
-        "|------|-------|-----------|",
+        "| Date | Event | Community | 資料 |",
+        "|------|-------|-----------|------|",
     ];
 
     const rows = events.map((event) => {
         const eventTitle = escapeLinkText(event.title);
         const communityTitle = escapeLinkText(event.communityTitle || "-");
         const communityCell = event.communityUrl ? `[${communityTitle}](${event.communityUrl})` : communityTitle;
-        return `| ${formatDateInJst(event.startedAt)} | [${eventTitle}](${event.url}) | ${communityCell} |`;
+        const materialCell = event.materialUrl ? `[${MATERIAL_LINK_LABEL}](${event.materialUrl})` : MATERIAL_EMPTY_CELL;
+        return `| ${formatDateInJst(event.startedAt)} | [${eventTitle}](${event.url}) | ${communityCell} | ${materialCell} |`;
     });
 
     return [...header, ...rows].join("\n");
+}
+
+function parseDocswellFeed(feedXml) {
+    const eventMaterials = new Map();
+    const fallbackSlides = [];
+
+    for (const itemXml of matchTagBlocks(feedXml, "item")) {
+        const slide = parseDocswellItem(itemXml);
+
+        if (!slide.materialUrl) {
+            continue;
+        }
+
+        if (slide.eventUrls.length) {
+            for (const eventUrl of slide.eventUrls) {
+                const existingMaterial = eventMaterials.get(eventUrl);
+
+                if (!existingMaterial || isMoreRecentSlide(slide, existingMaterial)) {
+                    eventMaterials.set(eventUrl, slide);
+                }
+            }
+
+            continue;
+        }
+
+        fallbackSlides.push(slide);
+    }
+
+    return {
+        eventMaterials,
+        fallbackSlides,
+    };
+}
+
+function parseDocswellItem(itemXml) {
+    const title = stripDocswellPrefix(decodeXmlEntities(readTagValue(itemXml, "title")));
+    const description = decodeXmlEntities(readTagValue(itemXml, "description"));
+    const content = decodeXmlEntities(readTagValue(itemXml, "content:encoded"));
+    const link = normalizeDocswellUrl(decodeXmlEntities(readTagValue(itemXml, "guid")) || decodeXmlEntities(readTagValue(itemXml, "link")));
+    const publishedAt = parsePublishedAt(readTagValue(itemXml, "pubDate"), readTagValue(itemXml, "dc:date"));
+    const eventUrls = Array.from(new Set(extractUrls(`${description}\n${content}`).filter(isConnpassEventUrl).map(normalizeConnpassEventUrl)));
+    const searchText = normalizeMatchText([title, description, stripHtml(content)].filter(Boolean).join(" "));
+
+    return {
+        title,
+        materialUrl: link,
+        publishedAt,
+        eventUrls,
+        searchText,
+    };
+}
+
+function findFallbackMaterial(event, fallbackSlides, usedMaterialUrls) {
+    const eventTime = new Date(event.startedAt).getTime();
+
+    if (Number.isNaN(eventTime)) {
+        return null;
+    }
+
+    const communityNeedles = buildCommunityNeedles(event);
+
+    if (!communityNeedles.length) {
+        return null;
+    }
+
+    const candidates = fallbackSlides
+        .filter((slide) => !usedMaterialUrls.has(slide.materialUrl))
+        .map((slide) => {
+            const slideTime = Date.parse(slide.publishedAt);
+            const diffDays = Number.isNaN(slideTime) ? Number.POSITIVE_INFINITY : Math.abs(slideTime - eventTime) / 86_400_000;
+            const matchesCommunity = communityNeedles.some((needle) => slide.searchText.includes(needle));
+
+            return {
+                slide,
+                diffDays,
+                matchesCommunity,
+            };
+        })
+        .filter((candidate) => candidate.matchesCommunity && candidate.diffDays <= DOCSWELL_MATCH_WINDOW_DAYS)
+        .sort((left, right) => left.diffDays - right.diffDays || right.slide.searchText.length - left.slide.searchText.length);
+
+    return candidates[0]?.slide ?? null;
+}
+
+function buildCommunityNeedles(event) {
+    const needles = new Set();
+    const normalizedCommunityTitle = normalizeMatchText(event.communityTitle);
+
+    if (normalizedCommunityTitle) {
+        needles.add(normalizedCommunityTitle);
+    }
+
+    for (const communityUrl of [event.communityUrl, fallbackCommunityUrl(event.url)]) {
+        try {
+            const parsedUrl = new URL(String(communityUrl));
+            const subdomain = parsedUrl.hostname.split(".")[0]?.trim();
+
+            if (subdomain) {
+                needles.add(normalizeMatchText(subdomain));
+            }
+        } catch {
+            // Ignore malformed community URLs while building fallback match keys.
+        }
+    }
+
+    return Array.from(needles).filter((needle) => needle.length >= 3);
+}
+
+function createEmptyMaterialCatalog() {
+    return {
+        eventMaterials: new Map(),
+        fallbackSlides: [],
+    };
+}
+
+function buildDocswellFeedUrl() {
+    const configuredFeedUrl = process.env.DOCSWELL_FEED_URL?.trim();
+
+    if (configuredFeedUrl) {
+        return configuredFeedUrl;
+    }
+
+    const docswellUsername = process.env.DOCSWELL_USERNAME?.trim() || CONNPASS_NICKNAME;
+    return docswellUsername ? `https://docswell.com/user/${encodeURIComponent(docswellUsername)}/feed` : "";
+}
+
+function matchTagBlocks(content, tagName) {
+    const tagPattern = new RegExp(`<${escapeRegExp(tagName)}[^>]*>([\\s\\S]*?)<\\/${escapeRegExp(tagName)}>`, "gi");
+    return Array.from(content.matchAll(tagPattern), (match) => match[1]);
+}
+
+function readTagValue(content, tagName) {
+    const match = new RegExp(`<${escapeRegExp(tagName)}[^>]*>([\\s\\S]*?)<\\/${escapeRegExp(tagName)}>`, "i").exec(content);
+    return match ? unwrapCdata(match[1]).trim() : "";
+}
+
+function unwrapCdata(value) {
+    return String(value)
+        .replace(/^<!\[CDATA\[/, "")
+        .replace(/\]\]>$/, "");
+}
+
+function stripDocswellPrefix(value) {
+    return String(value).replace(/^\[スライド\]\s*/u, "").trim();
+}
+
+function parsePublishedAt(pubDate, dcDate) {
+    const parsedDate = Date.parse(pubDate || dcDate || "");
+    return Number.isNaN(parsedDate) ? "" : new Date(parsedDate).toISOString();
+}
+
+function normalizeDocswellUrl(url) {
+    if (!url) {
+        return "";
+    }
+
+    try {
+        const parsedUrl = new URL(String(url));
+        parsedUrl.hash = "";
+        parsedUrl.search = "";
+        return parsedUrl.toString();
+    } catch {
+        return String(url).trim().replace(/\?ref=rss$/i, "");
+    }
+}
+
+function extractUrls(value) {
+    return Array.from(String(value).matchAll(/https?:\/\/[^\s"'<>]+/g), (match) => trimTrailingUrlPunctuation(match[0]));
+}
+
+function trimTrailingUrlPunctuation(value) {
+    return String(value).replace(/[),.;]+$/g, "");
+}
+
+function isConnpassEventUrl(url) {
+    try {
+        const parsedUrl = new URL(String(url));
+        return /(^|\.)connpass\.com$/i.test(parsedUrl.hostname) && /^\/event\/\d+\/?$/i.test(parsedUrl.pathname);
+    } catch {
+        return false;
+    }
+}
+
+function normalizeConnpassEventUrl(url) {
+    try {
+        const parsedUrl = new URL(String(url));
+        parsedUrl.hash = "";
+        parsedUrl.search = "";
+        parsedUrl.hostname = parsedUrl.hostname.toLowerCase();
+        parsedUrl.pathname = parsedUrl.pathname.replace(/\/+$/, "") || "/";
+        return parsedUrl.toString();
+    } catch {
+        return String(url).trim().replace(/[/?#]+$/g, "");
+    }
+}
+
+function normalizeMatchText(value) {
+    return String(value)
+        .normalize("NFKC")
+        .toLowerCase()
+        .replace(/[\u3000\s]+/g, " ")
+        .trim();
+}
+
+function stripHtml(value) {
+    return String(value)
+        .replace(/<br\s*\/?>/gi, " ")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/[\u3000\s]+/g, " ")
+        .trim();
+}
+
+function decodeXmlEntities(value) {
+    return String(value)
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&apos;/g, "'")
+        .replace(/&#x([0-9a-f]+);/gi, (_, hexCode) => String.fromCodePoint(Number.parseInt(hexCode, 16)))
+        .replace(/&#(\d+);/g, (_, charCode) => String.fromCodePoint(Number.parseInt(charCode, 10)))
+        .replace(/&amp;/g, "&");
+}
+
+function isMoreRecentSlide(left, right) {
+    return Date.parse(left.publishedAt || "") >= Date.parse(right.publishedAt || "");
+}
+
+function escapeRegExp(value) {
+    return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function replaceSection(content, tagName, replacement) {
