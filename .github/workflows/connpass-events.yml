@@ -1,28 +1,35 @@
-name: Weekly connpass activity workflow
+name: Weekly profile refresh workflow
 
 on:
   schedule:
     - cron: "0 0 * * 1"
   workflow_dispatch:
 
+concurrency:
+  group: readme-refresh
+  cancel-in-progress: false
+
 jobs:
-  update-readme-with-connpass:
-    name: Update this repo's README with connpass activity
+  update-profile-readme:
+    name: Update this repo's README with weekly profile content
     runs-on: ubuntu-latest
     permissions:
       contents: write
     env:
       CONNPASS_NICKNAME: yuyanz
       DOCSWELL_USERNAME: yuyanz
+      QIITA_USERNAME: yuyanz
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Update README activity from connpass
+      - name: Update README content
         env:
           CONNPASS_API_KEY: ${{ secrets.CONNPASS_API_KEY }}
         run: node .github/scripts/update-connpass-events.mjs
@@ -37,5 +44,18 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add README.md
-          git commit -m "chore(readme): update connpass activity"
-          git push
+          git commit -m "chore(readme): refresh profile content"
+
+          for attempt in 1 2; do
+            if git push; then
+              exit 0
+            fi
+
+            if [ "$attempt" -eq 2 ]; then
+              echo "git push failed after retry."
+              exit 1
+            fi
+
+            git pull --rebase
+            sleep 5
+          done

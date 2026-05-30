@@ -29,51 +29,35 @@ git push -u origin main
 
 ---
 
-### 2. SNS アカウント名を設定する（README.md を編集）
+### 2. 必要ならアカウント名を調整する
 
-以下のプレースホルダーを **自分のアカウント名** に置換してください。
+このリポジトリは `yuyanz` / `Yuyanz9` 前提で設定済みです。fork して使う場合だけ、以下を自分のアカウント名に合わせて変更してください。
 
-| プレースホルダー | 置換先 | 出現箇所 |
+| 現在値 | 用途 | 変更箇所 |
 |---|---|---|
-| `YOUR_X_USERNAME` | X (Twitter) のユーザー名 | Connect セクション |
-| `YOUR_QIITA_USERNAME` | Qiita のユーザー名 | About Me セクション + Connect セクション |
-| `YOUR_CONNPASS_USERNAME` | connpass のユーザー名 | Connect セクション |
-
-#### 検索＆置換コマンド（例）
-
-エディタで `Ctrl + H` を使って一括置換するか、以下のコマンドで置換：
-
-```bash
-# macOS / Linux
-sed -i 's/YOUR_X_USERNAME/実際のユーザー名/g' README.md
-sed -i 's/YOUR_QIITA_USERNAME/実際のユーザー名/g' README.md
-sed -i 's/YOUR_CONNPASS_USERNAME/実際のユーザー名/g' README.md
-
-# Windows (PowerShell)
-(Get-Content README.md) -replace 'YOUR_X_USERNAME','実際のユーザー名' | Set-Content README.md
-(Get-Content README.md) -replace 'YOUR_QIITA_USERNAME','実際のユーザー名' | Set-Content README.md
-(Get-Content README.md) -replace 'YOUR_CONNPASS_USERNAME','実際のユーザー名' | Set-Content README.md
-```
+| `yuyanz_` | X (Twitter) のユーザー名 | `README.md` の Connect セクション |
+| `yuyanz` | Qiita のユーザー名 | `README.md` / `.github/workflows/connpass-events.yml` |
+| `yuyanz` | connpass / Docswell のユーザー名 | `.github/workflows/connpass-events.yml` |
 
 ---
 
-### 3. Qiita RSS フィードの URL を確認する
+### 3. Qiita RSS フィードを確認する
 
-GitHub Actions のワークフローで Qiita の記事を自動取得しています。
+GitHub Actions の週次ワークフローで Qiita の記事を自動取得しています。
 
 1. ブラウザで `https://qiita.com/あなたのQiitaユーザー名/feed` にアクセスし、XML が返ってくることを確認
-2. `.github/workflows/blog-posts.yml` 内の `YOUR_QIITA_USERNAME` を実際の Qiita ユーザー名に置換
+2. `.github/workflows/connpass-events.yml` 内の `QIITA_USERNAME` を実際の Qiita ユーザー名に変更
 
 ```yaml
-feed_list: "https://qiita.com/YOUR_QIITA_USERNAME/feed"
-#                          ↑ ここを置換
+QIITA_USERNAME: yuyanz
+#               ^^^^^^ ここを変更
 ```
 
 ---
 
-### 4. connpass API を設定する
+### 4. connpass API / Docswell を設定する
 
-Activity セクションは GitHub Actions から connpass API v2 と Docswell の RSS feed を参照して、週1で自動更新します。
+Activity セクションは GitHub Actions から connpass API v2 と Docswell の RSS feed を参照して、週1で自動更新します。主催イベントは connpass の owner 情報から、登壇資料は Docswell から反映されます。
 
 1. connpass で API 利用申請を行い、API キーを取得する
 2. GitHub リポジトリの **Settings** → **Secrets and variables** → **Actions** に移動する
@@ -87,7 +71,7 @@ Activity セクションは GitHub Actions から connpass API v2 と Docswell �
 
 ### 5. GitHub Actions の権限を設定する
 
-ブログ記事と connpass の自動取得ワークフローが README を更新（コミット・プッシュ）するために、書き込み権限が必要です。
+週次プロフィール更新ワークフローが README を更新（コミット・プッシュ）するために、書き込み権限が必要です。
 
 1. リポジトリの **Settings** → **Actions** → **General** に移動
 2. **Workflow permissions** セクションで **Read and write permissions** を選択
@@ -98,19 +82,11 @@ Activity セクションは GitHub Actions から connpass API v2 と Docswell �
 ### 6. ワークフローを初回実行する
 
 1. リポジトリの **Actions** タブに移動
-2. 左サイドバーから「**Latest blog post workflow**」を選択
+2. 左サイドバーから「**Weekly profile refresh workflow**」を選択
 3. **Run workflow** → **Run workflow** をクリック
-4. 完了後、README.md の `BLOG-POST-LIST` セクションに Qiita の最新記事が挿入されていることを確認
+4. 完了後、README.md の `BLOG-POST-LIST`、`CONNPASS-UPCOMING`、`CONNPASS-ARCHIVE` セクションが更新されていることを確認
 
-続けて connpass 用ワークフローも実行します。
-
-1. 左サイドバーから「**Weekly connpass activity workflow**」を選択
-2. **Run workflow** → **Run workflow** をクリック
-3. 完了後、README.md の `CONNPASS-UPCOMING` と `CONNPASS-ARCHIVE` セクションが更新されていることを確認
-
-> 以降は毎日 0:00 UTC（日本時間 9:00）に自動実行されます。
-
-> connpass 側は毎週月曜 0:00 UTC（日本時間 9:00）に自動実行されます。
+> 以降は毎週月曜 0:00 UTC（日本時間 9:00）に自動実行されます。
 
 ---
 
@@ -155,6 +131,6 @@ README.md 最下部の以下の行を削除すると非表示になります：
 | 問題 | 対処 |
 |------|------|
 | Stats カードが表示されない | `Yuyanz9` がパブリックプロフィールか確認。プライベートリポジトリの統計は反映されません |
-| ブログ記事が更新されない | Actions タブでワークフロー実行したエラー有無を確認。権限設定（手順 4）を再確認 |
+| ブログ記事やイベント情報が更新されない | Actions タブで `Weekly profile refresh workflow` のエラー有無を確認。`CONNPASS_API_KEY` と Workflow permissions を再確認 |
 | バッジ画像が壊れて表示される | URL のスペースは `%20` にエンコードされているか確認 |
 | typing-svg が表示されない | [readme-typing-svg.demolab.com](https://readme-typing-svg.demolab.com) が稼働中か確認（外部サービス依存） |

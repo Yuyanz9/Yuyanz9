@@ -5,31 +5,42 @@ import process from "node:process";
 const README_PATH = path.resolve(process.env.README_PATH ?? "README.md");
 const FIXTURE_FILE = process.env.CONNPASS_FIXTURE_FILE?.trim();
 const DOCSWELL_FEED_FILE = process.env.DOCSWELL_FEED_FILE?.trim();
+const QIITA_FEED_FILE = process.env.QIITA_FEED_FILE?.trim();
 const CONNPASS_API_KEY = process.env.CONNPASS_API_KEY?.trim();
 const CONNPASS_NICKNAME = process.env.CONNPASS_NICKNAME?.trim();
+const MAX_QIITA_POSTS = Number.parseInt(process.env.MAX_QIITA_POSTS ?? "5", 10);
 const API_BASE_URL = "https://connpass.com/api/v2";
 const API_PAGE_SIZE = 100;
+const API_EVENT_ID_BATCH_SIZE = 50;
 const JST_TIME_ZONE = "Asia/Tokyo";
 const API_REQUEST_INTERVAL_MS = 1100;
 const DOCSWELL_MATCH_WINDOW_DAYS = 7;
 const MATERIAL_LINK_LABEL = "資料";
 const MATERIAL_EMPTY_CELL = "-";
 const DOCSWELL_FEED_URL = buildDocswellFeedUrl();
+const QIITA_FEED_URL = buildQiitaFeedUrl();
 
 let lastRequestAt = 0;
 
 async function main() {
     const readme = await readFile(README_PATH, "utf8");
-    const [{ ownerEvents, presenterEvents }, materialCatalog] = await Promise.all([
-        FIXTURE_FILE ? loadFixture(FIXTURE_FILE) : fetchConnpassEvents(),
+    const [materialCatalog, blogPosts] = await Promise.all([
         loadDocswellCatalog(),
+        loadQiitaPosts(),
     ]);
+    const { ownerEvents, relatedEvents } = FIXTURE_FILE
+        ? await loadFixture(FIXTURE_FILE)
+        : await fetchConnpassEvents(materialCatalog);
 
-    const events = attachMaterials(mergeEvents(ownerEvents, presenterEvents), materialCatalog);
+    const events = attachMaterials(mergeEvents(ownerEvents, relatedEvents), materialCatalog);
     const { upcomingEvents, archivedEvents } = splitEvents(events, new Date());
 
     const updatedReadme = replaceSection(
-        replaceSection(readme, "CONNPASS-UPCOMING", renderTable(upcomingEvents, "No upcoming connpass events found.")),
+        replaceSection(
+            replaceSection(readme, "BLOG-POST-LIST", renderBlogPostList(blogPosts)),
+            "CONNPASS-UPCOMING",
+            renderTable(upcomingEvents, "No upcoming connpass events found."),
+        ),
         "CONNPASS-ARCHIVE",
         renderTable(archivedEvents, "No archived connpass events found."),
     );
@@ -41,7 +52,7 @@ async function main() {
 
     await writeFile(README_PATH, updatedReadme, "utf8");
     console.log(
-        `Updated ${path.relative(process.cwd(), README_PATH)} with ${upcomingEvents.length} upcoming and ${archivedEvents.length} archived connpass events.`,
+        `Updated ${path.relative(process.cwd(), README_PATH)} with ${blogPosts.length} blog posts, ${upcomingEvents.length} upcoming events, and ${archivedEvents.length} archived events.`,
     );
 }
 
@@ -52,11 +63,15 @@ async function loadFixture(filePath) {
 
     return {
         ownerEvents: Array.isArray(parsedFixture.ownerEvents) ? parsedFixture.ownerEvents : [],
-        presenterEvents: Array.isArray(parsedFixture.presenterEvents) ? parsedFixture.presenterEvents : [],
+        relatedEvents: Array.isArray(parsedFixture.relatedEvents)
+            ? parsedFixture.relatedEvents
+            : Array.isArray(parsedFixture.presenterEvents)
+              ? parsedFixture.presenterEvents
+              : [],
     };
 }
 
-async function fetchConnpassEvents() {
+async function fetchConnpassEvents(materialCatalog) {
     if (!CONNPASS_API_KEY) {
         throw new Error("Missing CONNPASS_API_KEY. Configure it as a GitHub Actions secret before running this script.");
     }
@@ -76,16 +91,10 @@ async function fetchConnpassEvents() {
         return `${API_BASE_URL}/events/?${searchParams.toString()}`;
     });
 
-    const presenterEvents = await fetchPaginatedEvents((start) => {
-        const searchParams = new URLSearchParams({
-            start: String(start),
-            count: String(API_PAGE_SIZE),
-        });
+    const linkedEventIds = extractConnpassEventIds(materialCatalog);
+    const relatedEvents = linkedEventIds.length ? await fetchEventsByIds(linkedEventIds) : [];
 
-        return `${API_BASE_URL}/users/${encodeURIComponent(CONNPASS_NICKNAME)}/presenter_events/?${searchParams.toString()}`;
-    });
-
-    return { ownerEvents, presenterEvents };
+    return { ownerEvents, relatedEvents };
 }
 
 async function loadDocswellCatalog() {
@@ -117,6 +126,30 @@ async function loadDocswellCatalog() {
     }
 }
 
+async function loadQiitaPosts() {
+    if (QIITA_FEED_FILE) {
+        const fixturePath = path.resolve(QIITA_FEED_FILE);
+        const rawFeed = await readFile(fixturePath, "utf8");
+        return parseQiitaFeed(rawFeed);
+    }
+
+    if (!QIITA_FEED_URL) {
+        return [];
+    }
+
+    const response = await fetch(QIITA_FEED_URL, {
+        headers: {
+            "User-Agent": "Yuyanz9-README-Blog-Sync",
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error(`Qiita feed request failed: ${response.status} ${response.statusText}`.trim());
+    }
+
+    return parseQiitaFeed(await response.text());
+}
+
 async function fetchPaginatedEvents(buildUrl) {
     const events = [];
     let start = 1;
@@ -131,6 +164,27 @@ async function fetchPaginatedEvents(buildUrl) {
         }
 
         start += API_PAGE_SIZE;
+    }
+
+    return events;
+}
+
+async function fetchEventsByIds(eventIds) {
+    const events = [];
+
+    for (const batch of chunkArray(eventIds, API_EVENT_ID_BATCH_SIZE)) {
+        const searchParams = new URLSearchParams({
+            count: String(batch.length),
+            order: "2",
+        });
+
+        for (const eventId of batch) {
+            searchParams.append("event_id", String(eventId));
+        }
+
+        const payload = await requestConnpassJson(`${API_BASE_URL}/events/?${searchParams.toString()}`);
+        const pageEvents = Array.isArray(payload.events) ? payload.events : [];
+        events.push(...pageEvents);
     }
 
     return events;
@@ -166,10 +220,10 @@ async function requestConnpassJson(url, retryCount = 0) {
     return response.json();
 }
 
-function mergeEvents(ownerEvents, presenterEvents) {
+function mergeEvents(ownerEvents, relatedEvents) {
     const mergedEvents = new Map();
 
-    for (const event of [...ownerEvents, ...presenterEvents]) {
+    for (const event of [...ownerEvents, ...relatedEvents]) {
         if (!event || !event.id || !event.title || !event.url || !event.started_at) {
             continue;
         }
@@ -290,6 +344,14 @@ function renderTable(events, emptyMessage) {
     return [...header, ...rows].join("\n");
 }
 
+function renderBlogPostList(posts) {
+    if (!posts.length) {
+        return "No recent Qiita posts found.";
+    }
+
+    return posts.map((post) => `- [${escapeLinkText(post.title)}](${post.url})`).join("\n");
+}
+
 function parseDocswellFeed(feedXml) {
     const eventMaterials = new Map();
     const fallbackSlides = [];
@@ -338,6 +400,23 @@ function parseDocswellItem(itemXml) {
         eventUrls,
         searchText,
     };
+}
+
+function parseQiitaFeed(feedXml) {
+    const entryBlocks = matchTagBlocks(feedXml, "entry");
+    const itemBlocks = entryBlocks.length ? entryBlocks : matchTagBlocks(feedXml, "item");
+
+    return itemBlocks
+        .map((itemXml) => ({
+            title: decodeXmlEntities(readTagValue(itemXml, "title")),
+            url:
+                decodeXmlEntities(readTagAttribute(itemXml, "link", "href", { rel: "alternate" })) ||
+                decodeXmlEntities(readTagValue(itemXml, "url")) ||
+                decodeXmlEntities(readTagValue(itemXml, "link")) ||
+                decodeXmlEntities(readTagValue(itemXml, "guid")),
+        }))
+        .filter((post) => post.title && post.url)
+        .slice(0, Number.isFinite(MAX_QIITA_POSTS) && MAX_QIITA_POSTS > 0 ? MAX_QIITA_POSTS : 5);
 }
 
 function findFallbackMaterial(event, fallbackSlides, usedMaterialUrls) {
@@ -403,6 +482,20 @@ function createEmptyMaterialCatalog() {
     };
 }
 
+function extractConnpassEventIds(materialCatalog) {
+    const eventIds = new Set();
+
+    for (const eventUrl of materialCatalog.eventMaterials.keys()) {
+        const eventId = extractConnpassEventId(eventUrl);
+
+        if (eventId) {
+            eventIds.add(eventId);
+        }
+    }
+
+    return Array.from(eventIds);
+}
+
 function buildDocswellFeedUrl() {
     const configuredFeedUrl = process.env.DOCSWELL_FEED_URL?.trim();
 
@@ -414,6 +507,17 @@ function buildDocswellFeedUrl() {
     return docswellUsername ? `https://docswell.com/user/${encodeURIComponent(docswellUsername)}/feed` : "";
 }
 
+function buildQiitaFeedUrl() {
+    const configuredFeedUrl = process.env.QIITA_FEED_URL?.trim();
+
+    if (configuredFeedUrl) {
+        return configuredFeedUrl;
+    }
+
+    const qiitaUsername = process.env.QIITA_USERNAME?.trim();
+    return qiitaUsername ? `https://qiita.com/${encodeURIComponent(qiitaUsername)}/feed` : "";
+}
+
 function matchTagBlocks(content, tagName) {
     const tagPattern = new RegExp(`<${escapeRegExp(tagName)}[^>]*>([\\s\\S]*?)<\\/${escapeRegExp(tagName)}>`, "gi");
     return Array.from(content.matchAll(tagPattern), (match) => match[1]);
@@ -422,6 +526,27 @@ function matchTagBlocks(content, tagName) {
 function readTagValue(content, tagName) {
     const match = new RegExp(`<${escapeRegExp(tagName)}[^>]*>([\\s\\S]*?)<\\/${escapeRegExp(tagName)}>`, "i").exec(content);
     return match ? unwrapCdata(match[1]).trim() : "";
+}
+
+function readTagAttribute(content, tagName, attributeName, requiredAttributes = {}) {
+    const tagPattern = new RegExp(`<${escapeRegExp(tagName)}\\b([^>]*)>`, "gi");
+
+    for (const match of content.matchAll(tagPattern)) {
+        const attributeText = match[1] ?? "";
+        const attributes = Object.fromEntries(
+            Array.from(attributeText.matchAll(/([^\s=]+)\s*=\s*"([^"]*)"/g), (attributeMatch) => [attributeMatch[1], attributeMatch[2]]),
+        );
+
+        const hasRequiredAttributes = Object.entries(requiredAttributes).every(
+            ([attributeKey, attributeValue]) => attributes[attributeKey] === attributeValue,
+        );
+
+        if (hasRequiredAttributes && attributes[attributeName]) {
+            return attributes[attributeName];
+        }
+    }
+
+    return "";
 }
 
 function unwrapCdata(value) {
@@ -481,6 +606,16 @@ function normalizeConnpassEventUrl(url) {
         return parsedUrl.toString();
     } catch {
         return String(url).trim().replace(/[/?#]+$/g, "");
+    }
+}
+
+function extractConnpassEventId(url) {
+    try {
+        const parsedUrl = new URL(String(url));
+        const match = /^\/event\/(\d+)\/?$/i.exec(parsedUrl.pathname);
+        return match ? Number.parseInt(match[1], 10) : null;
+    } catch {
+        return null;
     }
 }
 
@@ -551,6 +686,16 @@ function sleep(ms) {
     return new Promise((resolve) => {
         setTimeout(resolve, ms);
     });
+}
+
+function chunkArray(values, chunkSize) {
+    const chunks = [];
+
+    for (let index = 0; index < values.length; index += chunkSize) {
+        chunks.push(values.slice(index, index + chunkSize));
+    }
+
+    return chunks;
 }
 
 main().catch((error) => {
