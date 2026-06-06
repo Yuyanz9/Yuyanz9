@@ -16,7 +16,7 @@ jobs:
     permissions:
       contents: write
     env:
-      CONNPASS_NICKNAME: yuyanz
+      CONNPASS_MANAGED_SUBDOMAIN: yonayona
       DOCSWELL_USERNAME: yuyanz
       QIITA_USERNAME: yuyanz
     steps:

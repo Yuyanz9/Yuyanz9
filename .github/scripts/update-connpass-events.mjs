@@ -8,10 +8,10 @@ const DOCSWELL_FEED_FILE = process.env.DOCSWELL_FEED_FILE?.trim();
 const QIITA_FEED_FILE = process.env.QIITA_FEED_FILE?.trim();
 const CONNPASS_API_KEY = process.env.CONNPASS_API_KEY?.trim();
 const CONNPASS_NICKNAME = process.env.CONNPASS_NICKNAME?.trim();
+const CONNPASS_MANAGED_SUBDOMAIN = process.env.CONNPASS_MANAGED_SUBDOMAIN?.trim();
 const MAX_QIITA_POSTS = Number.parseInt(process.env.MAX_QIITA_POSTS ?? "5", 10);
 const API_BASE_URL = "https://connpass.com/api/v2";
 const API_PAGE_SIZE = 100;
-const API_EVENT_ID_BATCH_SIZE = 50;
 const JST_TIME_ZONE = "Asia/Tokyo";
 const API_REQUEST_INTERVAL_MS = 1100;
 const DOCSWELL_MATCH_WINDOW_DAYS = 7;
@@ -28,11 +28,11 @@ async function main() {
         loadDocswellCatalog(),
         loadQiitaPosts(),
     ]);
-    const { ownerEvents, relatedEvents } = FIXTURE_FILE
+    const { presenterEvents, managedEvents } = FIXTURE_FILE
         ? await loadFixture(FIXTURE_FILE)
         : await fetchConnpassEvents(materialCatalog);
 
-    const events = attachMaterials(mergeEvents(ownerEvents, relatedEvents), materialCatalog);
+    const events = attachMaterials(mergeEvents(presenterEvents, managedEvents), materialCatalog);
     const { upcomingEvents, archivedEvents } = splitEvents(events, new Date());
 
     const updatedReadme = replaceSection(
@@ -62,11 +62,17 @@ async function loadFixture(filePath) {
     const parsedFixture = JSON.parse(rawFixture);
 
     return {
-        ownerEvents: Array.isArray(parsedFixture.ownerEvents) ? parsedFixture.ownerEvents : [],
-        relatedEvents: Array.isArray(parsedFixture.relatedEvents)
-            ? parsedFixture.relatedEvents
-            : Array.isArray(parsedFixture.presenterEvents)
-              ? parsedFixture.presenterEvents
+        presenterEvents: Array.isArray(parsedFixture.presenterEvents)
+            ? parsedFixture.presenterEvents
+            : Array.isArray(parsedFixture.attendedEvents)
+            ? parsedFixture.attendedEvents
+            : Array.isArray(parsedFixture.relatedEvents)
+              ? parsedFixture.relatedEvents
+              : [],
+        managedEvents: Array.isArray(parsedFixture.managedEvents)
+            ? parsedFixture.managedEvents
+            : Array.isArray(parsedFixture.ownerEvents)
+              ? parsedFixture.ownerEvents
               : [],
     };
 }
@@ -76,25 +82,51 @@ async function fetchConnpassEvents(materialCatalog) {
         throw new Error("Missing CONNPASS_API_KEY. Configure it as a GitHub Actions secret before running this script.");
     }
 
-    if (!CONNPASS_NICKNAME) {
-        throw new Error("Missing CONNPASS_NICKNAME. Set it in the workflow env or repository variables.");
+    const managedEvents = CONNPASS_MANAGED_SUBDOMAIN
+        ? await fetchPaginatedEvents((start) => {
+              const searchParams = new URLSearchParams({
+                  subdomain: CONNPASS_MANAGED_SUBDOMAIN,
+                  order: "2",
+                  start: String(start),
+                  count: String(API_PAGE_SIZE),
+              });
+
+              return `${API_BASE_URL}/events/?${searchParams.toString()}`;
+          })
+        : [];
+    const presenterEvents = await fetchEventsByUrls(Array.from(materialCatalog.eventMaterials.keys()));
+
+    return { presenterEvents, managedEvents };
+}
+
+async function fetchEventsByUrls(eventUrls) {
+    const presenterEvents = [];
+    const seenEventIds = new Set();
+
+    for (const eventUrl of eventUrls) {
+        const eventId = parseConnpassEventId(eventUrl);
+
+        if (!eventId || seenEventIds.has(eventId)) {
+            continue;
+        }
+
+        const searchParams = new URLSearchParams({
+            event_id: String(eventId),
+            count: "1",
+        });
+        const payload = await requestConnpassJson(`${API_BASE_URL}/events/?${searchParams.toString()}`);
+        const event = Array.isArray(payload.events) ? payload.events[0] : null;
+
+        if (!event) {
+            console.warn(`Skipping unresolved Docswell-linked connpass event: ${eventUrl}`);
+            continue;
+        }
+
+        presenterEvents.push(event);
+        seenEventIds.add(eventId);
     }
 
-    const ownerEvents = await fetchPaginatedEvents((start) => {
-        const searchParams = new URLSearchParams({
-            owner_nickname: CONNPASS_NICKNAME,
-            order: "2",
-            start: String(start),
-            count: String(API_PAGE_SIZE),
-        });
-
-        return `${API_BASE_URL}/events/?${searchParams.toString()}`;
-    });
-
-    const linkedEventIds = extractConnpassEventIds(materialCatalog);
-    const relatedEvents = linkedEventIds.length ? await fetchEventsByIds(linkedEventIds) : [];
-
-    return { ownerEvents, relatedEvents };
+    return presenterEvents;
 }
 
 async function loadDocswellCatalog() {
@@ -169,27 +201,6 @@ async function fetchPaginatedEvents(buildUrl) {
     return events;
 }
 
-async function fetchEventsByIds(eventIds) {
-    const events = [];
-
-    for (const batch of chunkArray(eventIds, API_EVENT_ID_BATCH_SIZE)) {
-        const searchParams = new URLSearchParams({
-            count: String(batch.length),
-            order: "2",
-        });
-
-        for (const eventId of batch) {
-            searchParams.append("event_id", String(eventId));
-        }
-
-        const payload = await requestConnpassJson(`${API_BASE_URL}/events/?${searchParams.toString()}`);
-        const pageEvents = Array.isArray(payload.events) ? payload.events : [];
-        events.push(...pageEvents);
-    }
-
-    return events;
-}
-
 async function requestConnpassJson(url, retryCount = 0) {
     const now = Date.now();
     const waitMs = Math.max(0, API_REQUEST_INTERVAL_MS - (now - lastRequestAt));
@@ -220,10 +231,10 @@ async function requestConnpassJson(url, retryCount = 0) {
     return response.json();
 }
 
-function mergeEvents(ownerEvents, relatedEvents) {
+function mergeEvents(primaryEvents, secondaryEvents) {
     const mergedEvents = new Map();
 
-    for (const event of [...ownerEvents, ...relatedEvents]) {
+    for (const event of [...primaryEvents, ...secondaryEvents]) {
         if (!event || !event.id || !event.title || !event.url || !event.started_at) {
             continue;
         }
@@ -482,20 +493,6 @@ function createEmptyMaterialCatalog() {
     };
 }
 
-function extractConnpassEventIds(materialCatalog) {
-    const eventIds = new Set();
-
-    for (const eventUrl of materialCatalog.eventMaterials.keys()) {
-        const eventId = extractConnpassEventId(eventUrl);
-
-        if (eventId) {
-            eventIds.add(eventId);
-        }
-    }
-
-    return Array.from(eventIds);
-}
-
 function buildDocswellFeedUrl() {
     const configuredFeedUrl = process.env.DOCSWELL_FEED_URL?.trim();
 
@@ -609,7 +606,7 @@ function normalizeConnpassEventUrl(url) {
     }
 }
 
-function extractConnpassEventId(url) {
+function parseConnpassEventId(url) {
     try {
         const parsedUrl = new URL(String(url));
         const match = /^\/event\/(\d+)\/?$/i.exec(parsedUrl.pathname);
@@ -686,16 +683,6 @@ function sleep(ms) {
     return new Promise((resolve) => {
         setTimeout(resolve, ms);
     });
-}
-
-function chunkArray(values, chunkSize) {
-    const chunks = [];
-
-    for (let index = 0; index < values.length; index += chunkSize) {
-        chunks.push(values.slice(index, index + chunkSize));
-    }
-
-    return chunks;
 }
 
 main().catch((error) => {

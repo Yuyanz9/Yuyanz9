@@ -37,7 +37,8 @@ git push -u origin main
 |---|---|---|
 | `yuyanz_` | X (Twitter) のユーザー名 | `README.md` の Connect セクション |
 | `yuyanz` | Qiita のユーザー名 | `README.md` / `.github/workflows/connpass-events.yml` |
-| `yuyanz` | connpass / Docswell のユーザー名 | `.github/workflows/connpass-events.yml` |
+| `yuyanz` | Docswell のユーザー名 | `.github/workflows/connpass-events.yml` |
+| `yonayona` | 管理対象 connpass グループのサブドメイン | `.github/workflows/connpass-events.yml` |
 
 ---
 
@@ -57,13 +58,14 @@ QIITA_USERNAME: yuyanz
 
 ### 4. connpass API / Docswell を設定する
 
-Activity セクションは GitHub Actions から connpass API v2 と Docswell の RSS feed を参照して、週1で自動更新します。主催イベントは connpass の owner 情報から、登壇資料は Docswell から反映されます。
+Activity セクションは GitHub Actions から connpass API v2 と Docswell の RSS feed を参照して、週1で自動更新します。connpass では **指定したグループ（例: YonaYonaAzure Club）が管理しているイベント** を取得し、それ以外の登壇情報は **Docswell にアップした資料に含まれる connpass イベント URL** を起点に反映されます。
 
 1. connpass で API 利用申請を行い、API キーを取得する
 2. GitHub リポジトリの **Settings** → **Secrets and variables** → **Actions** に移動する
 3. **New repository secret** で `CONNPASS_API_KEY` を追加する
-4. 必要なら `.github/workflows/connpass-events.yml` 内の `CONNPASS_NICKNAME` を自分の connpass ニックネームに変更する
-5. Docswell のユーザー名が connpass ニックネームと異なる場合は、同じく `.github/workflows/connpass-events.yml` 内の `DOCSWELL_USERNAME` を自分の Docswell ユーザー名に変更する
+4. YonaYonaAzure Club 以外のコミュニティを管理対象にしたい場合は、`.github/workflows/connpass-events.yml` 内の `CONNPASS_MANAGED_SUBDOMAIN` をその connpass サブドメインに変更する
+5. `.github/workflows/connpass-events.yml` 内の `DOCSWELL_USERNAME` を、自分が登壇資料を公開している Docswell ユーザー名に変更する
+6. 外部コミュニティでの登壇を README に載せたい場合は、Docswell の資料本文または説明文に対象 connpass イベントの URL を含める
 
 > ワークフローは毎週月曜 0:00 UTC（日本時間 9:00）に実行されます。
 
