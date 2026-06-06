@@ -40,6 +40,7 @@
 |------|-------|-----------|------|
 | 2026-05-29 | [YonaYona Azure LT 会](https://yonayona.connpass.com/event/392577/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
 | 2026-05-15 | [YonaYona SRE Agentを学ぶ会](https://yonayona.connpass.com/event/389895/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
+| 2026-05-13 | [なんでもCopilot#80「裏コパ/第3回なんコパLT大会、急きょ開幕の巻！」](https://nandemo.connpass.com/event/390633/) | [なんでもCopilot](https://nandemo.connpass.com/) | [資料](https://docswell.com/s/yuyanz/5Q2MQ7-2026-05-13-202146) |
 | 2026-04-30 | [YonaYona Entra ID Night](https://yonayona.connpass.com/event/388171/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
 | 2026-04-24 | [AI Dev Day in Fukuoka](https://azureai.connpass.com/event/382334/) | [Azure AI Developers Community(JP)](https://azureai.connpass.com/) | [資料](https://docswell.com/s/yuyanz/KPRMJX-2026-04-24-115048) |
 | 2026-04-18 | [Microsoft 365 を触って学ぶ！環境“まるごと”お持ち帰りハンズオン in Fukuoka](https://yonayona.connpass.com/event/388268/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
