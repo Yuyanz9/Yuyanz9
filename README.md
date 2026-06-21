@@ -28,8 +28,8 @@
 <!-- CONNPASS-UPCOMING:START -->
 | Date | Event | Community | 資料 |
 |------|-------|-----------|------|
-| 2026-06-20 | [Microsoft Build //localhost:fukuoka](https://yonayona.connpass.com/event/395705/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
 | 2026-06-30 | [YonaYona Infra Night](https://yonayona.connpass.com/event/395805/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
+| 2026-07-16 | [YonaYona Build Update  Night](https://yonayona.connpass.com/event/396467/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
 <!-- CONNPASS-UPCOMING:END -->
 
 #### 📚 Recent Archive
@@ -37,6 +37,7 @@
 <!-- CONNPASS-ARCHIVE:START -->
 | Date | Event | Community | 資料 |
 |------|-------|-----------|------|
+| 2026-06-20 | [Microsoft Build //localhost:fukuoka](https://yonayona.connpass.com/event/395705/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
 | 2026-06-12 | [【Azure AIの必須機能!?】YonaYona Durable Functions Night](https://yonayona.connpass.com/event/393817/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
 | 2026-05-29 | [YonaYona Azure LT 会](https://yonayona.connpass.com/event/392577/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
 | 2026-05-15 | [YonaYona SRE Agentを学ぶ会](https://yonayona.connpass.com/event/389895/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
