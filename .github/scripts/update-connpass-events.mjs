@@ -440,7 +440,7 @@ function renderTable(events, emptyMessage) {
     }
 
     const header = [
-        "| Date | Event | Community | 資料 |",
+        "| Date | Event | Community | 登壇資料 |",
         "|------|-------|-----------|------|",
     ];
 
