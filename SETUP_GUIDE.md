@@ -66,8 +66,23 @@ Activity セクションは GitHub Actions から connpass API v2 と Docswell �
 4. YonaYonaAzure Club 以外のコミュニティを管理対象にしたい場合は、`.github/workflows/connpass-events.yml` 内の `CONNPASS_MANAGED_SUBDOMAIN` をその connpass サブドメインに変更する
 5. `.github/workflows/connpass-events.yml` 内の `DOCSWELL_USERNAME` を、自分が登壇資料を公開している Docswell ユーザー名に変更する
 6. 外部コミュニティでの登壇を README に載せたい場合は、Docswell の資料本文または説明文に対象 connpass イベントの URL を含める
+7. connpass 管理外の登壇やコミュニティブース出展も載せたい場合は、`.github/scripts/manual-events.json` にイベントを追加する
 
 > ワークフローは毎週月曜 0:00 UTC（日本時間 9:00）に実行されます。
+
+`manual-events.json` に追加したイベントは、週次更新でも README の Upcoming / Archive に残ります。
+
+```json
+[
+  {
+    "title": "YonaYona Azure Clubへようこそ！",
+    "url": "https://aidevday.com/sessions/yonayona-azure-club",
+    "startedAt": "2026-07-24T13:30:00+09:00",
+    "communityTitle": "AI Dev Day 2026",
+    "communityUrl": "https://aidevday.com/"
+  }
+]
+```
 
 ---
 

@@ -30,6 +30,8 @@
 |------|-------|-----------|------|
 | 2026-06-30 | [YonaYona Infra Night](https://yonayona.connpass.com/event/395805/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
 | 2026-07-16 | [YonaYona Build Update  Night](https://yonayona.connpass.com/event/396467/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
+| 2026-07-24 | [YonaYona Azure Clubへようこそ！](https://aidevday.com/sessions/yonayona-azure-club) | [AI Dev Day 2026](https://aidevday.com/) | - |
+| 2026-08-27 | [【YonaAz in 大阪】 AI × VDI Meetup](https://yonayona.connpass.com/event/397871/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
 <!-- CONNPASS-UPCOMING:END -->
 
 #### 📚 Recent Archive

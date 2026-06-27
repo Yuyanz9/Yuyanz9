@@ -6,6 +6,7 @@ const README_PATH = path.resolve(process.env.README_PATH ?? "README.md");
 const FIXTURE_FILE = process.env.CONNPASS_FIXTURE_FILE?.trim();
 const DOCSWELL_FEED_FILE = process.env.DOCSWELL_FEED_FILE?.trim();
 const QIITA_FEED_FILE = process.env.QIITA_FEED_FILE?.trim();
+const MANUAL_EVENTS_FILE = process.env.MANUAL_EVENTS_FILE?.trim() || ".github/scripts/manual-events.json";
 const CONNPASS_API_KEY = process.env.CONNPASS_API_KEY?.trim();
 const CONNPASS_NICKNAME = process.env.CONNPASS_NICKNAME?.trim();
 const CONNPASS_MANAGED_SUBDOMAIN = process.env.CONNPASS_MANAGED_SUBDOMAIN?.trim();
@@ -24,15 +25,19 @@ let lastRequestAt = 0;
 
 async function main() {
     const readme = await readFile(README_PATH, "utf8");
-    const [materialCatalog, blogPosts] = await Promise.all([
+    const [materialCatalog, blogPosts, manualEvents] = await Promise.all([
         loadDocswellCatalog(),
         loadQiitaPosts(),
+        loadManualEvents(),
     ]);
     const { presenterEvents, managedEvents } = FIXTURE_FILE
         ? await loadFixture(FIXTURE_FILE)
         : await fetchConnpassEvents(materialCatalog);
 
-    const events = attachMaterials(mergeEvents(presenterEvents, managedEvents), materialCatalog);
+    const events = mergeNormalizedEvents(
+        attachMaterials(mergeEvents(presenterEvents, managedEvents), materialCatalog),
+        manualEvents,
+    );
     const { upcomingEvents, archivedEvents } = splitEvents(events, new Date());
 
     const updatedReadme = replaceSection(
@@ -54,6 +59,30 @@ async function main() {
     console.log(
         `Updated ${path.relative(process.cwd(), README_PATH)} with ${blogPosts.length} blog posts, ${upcomingEvents.length} upcoming events, and ${archivedEvents.length} archived events.`,
     );
+}
+
+async function loadManualEvents() {
+    const manualEventsPath = path.resolve(MANUAL_EVENTS_FILE);
+
+    try {
+        const rawConfig = await readFile(manualEventsPath, "utf8");
+        const parsedConfig = JSON.parse(rawConfig);
+        const configuredEvents = Array.isArray(parsedConfig)
+            ? parsedConfig
+            : Array.isArray(parsedConfig.manualEvents)
+              ? parsedConfig.manualEvents
+              : [];
+
+        return configuredEvents.map(normalizeManualEvent).filter(Boolean);
+    } catch (error) {
+        if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
+            return [];
+        }
+
+        throw new Error(
+            `Failed to load manual events from ${path.relative(process.cwd(), manualEventsPath)}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+    }
 }
 
 async function loadFixture(filePath) {
@@ -281,6 +310,25 @@ function attachMaterials(events, materialCatalog) {
     });
 }
 
+function mergeNormalizedEvents(...eventSets) {
+    const mergedEvents = new Map();
+
+    for (const event of eventSets.flat()) {
+        if (!event || !event.title || !event.url || !event.startedAt) {
+            continue;
+        }
+
+        const eventKey = normalizeEventUrl(event.url);
+        const existingEvent = mergedEvents.get(eventKey);
+
+        if (!existingEvent || isMoreRecentEvent(event, existingEvent)) {
+            mergedEvents.set(eventKey, event);
+        }
+    }
+
+    return Array.from(mergedEvents.values());
+}
+
 function resolveCommunity(event) {
     const groupTitle = typeof event.group?.title === "string" ? event.group.title.trim() : "";
     const groupUrl = typeof event.group?.url === "string" ? event.group.url : "";
@@ -332,6 +380,58 @@ function splitEvents(events, now) {
     archivedEvents.sort((left, right) => new Date(right.startedAt) - new Date(left.startedAt));
 
     return { upcomingEvents, archivedEvents };
+}
+
+function normalizeManualEvent(event, index) {
+    const title = typeof event?.title === "string" ? event.title.trim() : "";
+    const url = typeof event?.url === "string" ? event.url.trim() : "";
+    const startedAt =
+        typeof event?.startedAt === "string"
+            ? event.startedAt.trim()
+            : typeof event?.started_at === "string"
+              ? event.started_at.trim()
+              : "";
+
+    if (!title || !url || !startedAt) {
+        return null;
+    }
+
+    return {
+        id: String(event.id ?? `manual-${index + 1}`),
+        title,
+        url,
+        startedAt,
+        updatedAt:
+            typeof event?.updatedAt === "string"
+                ? event.updatedAt.trim()
+                : typeof event?.updated_at === "string"
+                  ? event.updated_at.trim()
+                  : startedAt,
+        communityTitle:
+            typeof event?.communityTitle === "string"
+                ? event.communityTitle.trim()
+                : typeof event?.community_title === "string"
+                  ? event.community_title.trim()
+                  : "-",
+        communityUrl:
+            typeof event?.communityUrl === "string"
+                ? event.communityUrl.trim()
+                : typeof event?.community_url === "string"
+                  ? event.community_url.trim()
+                  : "",
+        materialTitle:
+            typeof event?.materialTitle === "string"
+                ? event.materialTitle.trim()
+                : typeof event?.material_title === "string"
+                  ? event.material_title.trim()
+                  : "",
+        materialUrl:
+            typeof event?.materialUrl === "string"
+                ? event.materialUrl.trim()
+                : typeof event?.material_url === "string"
+                  ? event.material_url.trim()
+                  : "",
+    };
 }
 
 function renderTable(events, emptyMessage) {
@@ -606,6 +706,19 @@ function normalizeConnpassEventUrl(url) {
     }
 }
 
+function normalizeEventUrl(url) {
+    try {
+        const parsedUrl = new URL(String(url));
+        parsedUrl.hash = "";
+        parsedUrl.search = "";
+        parsedUrl.hostname = parsedUrl.hostname.toLowerCase();
+        parsedUrl.pathname = parsedUrl.pathname.replace(/\/+$/, "") || "/";
+        return parsedUrl.toString();
+    } catch {
+        return String(url).trim().replace(/[/?#]+$/g, "");
+    }
+}
+
 function parseConnpassEventId(url) {
     try {
         const parsedUrl = new URL(String(url));
@@ -641,6 +754,10 @@ function decodeXmlEntities(value) {
         .replace(/&#x([0-9a-f]+);/gi, (_, hexCode) => String.fromCodePoint(Number.parseInt(hexCode, 16)))
         .replace(/&#(\d+);/g, (_, charCode) => String.fromCodePoint(Number.parseInt(charCode, 10)))
         .replace(/&amp;/g, "&");
+}
+
+function isMoreRecentEvent(left, right) {
+    return Date.parse(left.updatedAt || left.startedAt || "") >= Date.parse(right.updatedAt || right.startedAt || "");
 }
 
 function isMoreRecentSlide(left, right) {
