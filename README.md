@@ -3,6 +3,11 @@
 - 🏆 **Microsoft MVP** — Azure
 - ☁️ **Azure Virtual Desktop** specialist
 - 📝 [Qiita](https://qiita.com/yuyanz) で技術記事を執筆中
+<!-- ABOUT-ME-STATS:START -->
+- ✍️ 記事数: **76**
+- 🎤 登壇数（登壇資料数）: **18**
+- 🤝 イベント運営数: **33**
+<!-- ABOUT-ME-STATS:END -->
 - 🇯🇵 Based in Japan
 
 ---
@@ -26,10 +31,11 @@
 #### 📅 Upcoming
 
 <!-- CONNPASS-UPCOMING:START -->
-| Date | Event | Community | 資料 |
-|------|-------|-----------|------|
-| 2026-06-30 | [YonaYona Infra Night](https://yonayona.connpass.com/event/395805/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
-| 2026-07-16 | [YonaYona Build Update  Night](https://yonayona.connpass.com/event/396467/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
+| Date | Event | Community |
+|------|-------|-----------|
+| 2026-06-30 | [YonaYona Infra Night](https://yonayona.connpass.com/event/395805/) | [YonaYona Azure Club](https://yonayona.connpass.com/) |
+| 2026-07-16 | [YonaYona Build Update  Night](https://yonayona.connpass.com/event/396467/) | [YonaYona Azure Club](https://yonayona.connpass.com/) |
+| 2026-07-24 | [YonaYona Azure Clubへようこそ！](https://aidevday.com/sessions/yonayona-azure-club) | [YonaYona Azure Club](https://yonayona.connpass.com/) |
 <!-- CONNPASS-UPCOMING:END -->
 
 #### 📚 Recent Archive

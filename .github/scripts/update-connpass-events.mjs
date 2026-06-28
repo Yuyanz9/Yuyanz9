@@ -1,13 +1,17 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { constants as fsConstants } from "node:fs";
+import { access, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
 const README_PATH = path.resolve(process.env.README_PATH ?? "README.md");
+const DEFAULT_MANUAL_EVENTS_FILE = path.resolve(".github/scripts/manual-events.json");
 const FIXTURE_FILE = process.env.CONNPASS_FIXTURE_FILE?.trim();
 const DOCSWELL_FEED_FILE = process.env.DOCSWELL_FEED_FILE?.trim();
+const MANUAL_EVENTS_FILE = process.env.MANUAL_EVENTS_FILE?.trim() || DEFAULT_MANUAL_EVENTS_FILE;
 const QIITA_FEED_FILE = process.env.QIITA_FEED_FILE?.trim();
 const CONNPASS_API_KEY = process.env.CONNPASS_API_KEY?.trim();
 const CONNPASS_NICKNAME = process.env.CONNPASS_NICKNAME?.trim();
+const CONNPASS_USER_ID = process.env.CONNPASS_USER_ID?.trim();
 const CONNPASS_MANAGED_SUBDOMAIN = process.env.CONNPASS_MANAGED_SUBDOMAIN?.trim();
 const MAX_QIITA_POSTS = Number.parseInt(process.env.MAX_QIITA_POSTS ?? "5", 10);
 const API_BASE_URL = "https://connpass.com/api/v2";
@@ -19,40 +23,54 @@ const MATERIAL_LINK_LABEL = "資料";
 const MATERIAL_EMPTY_CELL = "-";
 const DOCSWELL_FEED_URL = buildDocswellFeedUrl();
 const QIITA_FEED_URL = buildQiitaFeedUrl();
+const QIITA_PROFILE_API_URL = buildQiitaProfileApiUrl();
+const CONNPASS_MANAGED_PROFILE_URL = buildConnpassManagedProfileUrl(1);
 
 let lastRequestAt = 0;
 
 async function main() {
     const readme = await readFile(README_PATH, "utf8");
-    const [materialCatalog, blogPosts] = await Promise.all([
+    const [materialCatalog, qiitaCatalog, manualEvents] = await Promise.all([
         loadDocswellCatalog(),
-        loadQiitaPosts(),
+        loadQiitaCatalog(),
+        loadManualEvents(),
     ]);
     const { presenterEvents, managedEvents } = FIXTURE_FILE
         ? await loadFixture(FIXTURE_FILE)
         : await fetchConnpassEvents(materialCatalog);
+    const managedEventCount = await resolveManagedEventCount(managedEvents, manualEvents);
 
-    const events = attachMaterials(mergeEvents(presenterEvents, managedEvents), materialCatalog);
+    const events = attachMaterials(mergeEvents(presenterEvents, managedEvents, manualEvents), materialCatalog);
     const { upcomingEvents, archivedEvents } = splitEvents(events, new Date());
+    const profileStats = {
+        articleCount: qiitaCatalog.totalPosts,
+        materialCount: materialCatalog.totalMaterials,
+        managedEventCount,
+    };
 
     const updatedReadme = replaceSection(
         replaceSection(
-            replaceSection(readme, "BLOG-POST-LIST", renderBlogPostList(blogPosts)),
-            "CONNPASS-UPCOMING",
-            renderTable(upcomingEvents, "No upcoming connpass events found."),
+            replaceSection(readme, "BLOG-POST-LIST", renderBlogPostList(qiitaCatalog.recentPosts)),
+            "ABOUT-ME-STATS",
+            renderAboutMeStats(profileStats),
         ),
+        "CONNPASS-UPCOMING",
+        renderTable(upcomingEvents, "No upcoming connpass events found.", { includeMaterials: false }),
+    );
+    const finalizedReadme = replaceSection(
+        updatedReadme,
         "CONNPASS-ARCHIVE",
         renderTable(archivedEvents, "No archived connpass events found."),
     );
 
-    if (updatedReadme === readme) {
+    if (finalizedReadme === readme) {
         console.log("README is already up to date.");
         return;
     }
 
-    await writeFile(README_PATH, updatedReadme, "utf8");
+    await writeFile(README_PATH, finalizedReadme, "utf8");
     console.log(
-        `Updated ${path.relative(process.cwd(), README_PATH)} with ${blogPosts.length} blog posts, ${upcomingEvents.length} upcoming events, and ${archivedEvents.length} archived events.`,
+        `Updated ${path.relative(process.cwd(), README_PATH)} with ${qiitaCatalog.recentPosts.length} blog posts, ${upcomingEvents.length} upcoming events, and ${archivedEvents.length} archived events.`,
     );
 }
 
@@ -75,6 +93,31 @@ async function loadFixture(filePath) {
               ? parsedFixture.ownerEvents
               : [],
     };
+}
+
+async function loadManualEvents() {
+    const manualEventsPath = path.resolve(MANUAL_EVENTS_FILE);
+
+    if (!(await fileExists(manualEventsPath))) {
+        return [];
+    }
+
+    const rawManualEvents = await readFile(manualEventsPath, "utf8");
+    const parsedManualEvents = JSON.parse(rawManualEvents);
+
+    if (Array.isArray(parsedManualEvents)) {
+        return parsedManualEvents;
+    }
+
+    if (Array.isArray(parsedManualEvents.events)) {
+        return parsedManualEvents.events;
+    }
+
+    if (Array.isArray(parsedManualEvents.manualEvents)) {
+        return parsedManualEvents.manualEvents;
+    }
+
+    return [];
 }
 
 async function fetchConnpassEvents(materialCatalog) {
@@ -158,15 +201,15 @@ async function loadDocswellCatalog() {
     }
 }
 
-async function loadQiitaPosts() {
+async function loadQiitaCatalog() {
     if (QIITA_FEED_FILE) {
         const fixturePath = path.resolve(QIITA_FEED_FILE);
         const rawFeed = await readFile(fixturePath, "utf8");
-        return parseQiitaFeed(rawFeed);
+        return buildQiitaCatalog(parseQiitaFeed(rawFeed));
     }
 
     if (!QIITA_FEED_URL) {
-        return [];
+        return createEmptyQiitaCatalog();
     }
 
     const response = await fetch(QIITA_FEED_URL, {
@@ -179,7 +222,12 @@ async function loadQiitaPosts() {
         throw new Error(`Qiita feed request failed: ${response.status} ${response.statusText}`.trim());
     }
 
-    return parseQiitaFeed(await response.text());
+    const [feedXml, totalPosts] = await Promise.all([
+        response.text(),
+        fetchQiitaPostCount(),
+    ]);
+
+    return buildQiitaCatalog(parseQiitaFeed(feedXml), totalPosts);
 }
 
 async function fetchPaginatedEvents(buildUrl) {
@@ -231,32 +279,73 @@ async function requestConnpassJson(url, retryCount = 0) {
     return response.json();
 }
 
-function mergeEvents(primaryEvents, secondaryEvents) {
+function mergeEvents(...eventGroups) {
     const mergedEvents = new Map();
 
-    for (const event of [...primaryEvents, ...secondaryEvents]) {
-        if (!event || !event.id || !event.title || !event.url || !event.started_at) {
-            continue;
-        }
+    for (const eventGroup of eventGroups) {
+        for (const event of eventGroup) {
+            if (!event || !event.id || !event.title || !event.url || !event.started_at) {
+                continue;
+            }
 
-        const community = resolveCommunity(event);
-        const normalizedEvent = {
-            id: Number(event.id),
-            title: String(event.title).trim(),
-            url: String(event.url),
-            startedAt: String(event.started_at),
-            updatedAt: String(event.updated_at ?? event.started_at),
-            communityTitle: community.title,
-            communityUrl: community.url,
-        };
+            const community = resolveCommunity(event);
+            const normalizedEvent = {
+                id: Number(event.id),
+                title: String(event.title).trim(),
+                url: String(event.url),
+                startedAt: String(event.started_at),
+                updatedAt: String(event.updated_at ?? event.started_at),
+                communityTitle: community.title,
+                communityUrl: community.url,
+            };
 
-        const existingEvent = mergedEvents.get(normalizedEvent.id);
-        if (!existingEvent || new Date(normalizedEvent.updatedAt) > new Date(existingEvent.updatedAt)) {
-            mergedEvents.set(normalizedEvent.id, normalizedEvent);
+            const existingEvent = mergedEvents.get(normalizedEvent.id);
+            if (!existingEvent || new Date(normalizedEvent.updatedAt) > new Date(existingEvent.updatedAt)) {
+                mergedEvents.set(normalizedEvent.id, normalizedEvent);
+            }
         }
     }
 
     return Array.from(mergedEvents.values());
+}
+
+function countManagedEvents(managedEvents, manualEvents) {
+    return mergeEvents(managedEvents, manualEvents.filter(isManagedCommunityEvent)).length;
+}
+
+async function resolveManagedEventCount(managedEvents, manualEvents) {
+    if (!CONNPASS_MANAGED_PROFILE_URL) {
+        return countManagedEvents(managedEvents, manualEvents);
+    }
+
+    try {
+        return await fetchConnpassManagedEventCount();
+    } catch (error) {
+        console.warn(`Falling back to community-managed event count: ${error instanceof Error ? error.message : String(error)}`);
+        return countManagedEvents(managedEvents, manualEvents);
+    }
+}
+
+async function fetchConnpassManagedEventCount() {
+    const firstPageHtml = await fetchText(CONNPASS_MANAGED_PROFILE_URL, "Yuyanz9-README-Connpass-Profile-Sync");
+    const lastPage = extractLastPageNumber(firstPageHtml);
+    let totalCount = countEventCards(firstPageHtml);
+
+    if (lastPage <= 1) {
+        return totalCount;
+    }
+
+    const remainingPages = await Promise.all(
+        Array.from({ length: lastPage - 1 }, (_, index) =>
+            fetchText(buildConnpassManagedProfileUrl(index + 2), "Yuyanz9-README-Connpass-Profile-Sync"),
+        ),
+    );
+
+    for (const pageHtml of remainingPages) {
+        totalCount += countEventCards(pageHtml);
+    }
+
+    return totalCount;
 }
 
 function attachMaterials(events, materialCatalog) {
@@ -334,25 +423,38 @@ function splitEvents(events, now) {
     return { upcomingEvents, archivedEvents };
 }
 
-function renderTable(events, emptyMessage) {
+function renderTable(events, emptyMessage, options = {}) {
+    const { includeMaterials = true } = options;
+
     if (!events.length) {
         return emptyMessage;
     }
 
-    const header = [
-        "| Date | Event | Community | 資料 |",
-        "|------|-------|-----------|------|",
-    ];
+    const header = includeMaterials
+        ? [
+              "| Date | Event | Community | 資料 |",
+              "|------|-------|-----------|------|",
+          ]
+        : [
+              "| Date | Event | Community |",
+              "|------|-------|-----------|",
+          ];
 
     const rows = events.map((event) => {
         const eventTitle = escapeLinkText(event.title);
         const communityTitle = escapeLinkText(event.communityTitle || "-");
         const communityCell = event.communityUrl ? `[${communityTitle}](${event.communityUrl})` : communityTitle;
         const materialCell = event.materialUrl ? `[${MATERIAL_LINK_LABEL}](${event.materialUrl})` : MATERIAL_EMPTY_CELL;
-        return `| ${formatDateInJst(event.startedAt)} | [${eventTitle}](${event.url}) | ${communityCell} | ${materialCell} |`;
+        return includeMaterials
+            ? `| ${formatDateInJst(event.startedAt)} | [${eventTitle}](${event.url}) | ${communityCell} | ${materialCell} |`
+            : `| ${formatDateInJst(event.startedAt)} | [${eventTitle}](${event.url}) | ${communityCell} |`;
     });
 
     return [...header, ...rows].join("\n");
+}
+
+function renderAboutMeStats(stats) {
+    return `- ✍️ 記事数: **${stats.articleCount}**\n- 🎤 登壇数（登壇資料数）: **${stats.materialCount}**\n- 🤝 イベント運営数: **${stats.managedEventCount}**`;
 }
 
 function renderBlogPostList(posts) {
@@ -366,6 +468,7 @@ function renderBlogPostList(posts) {
 function parseDocswellFeed(feedXml) {
     const eventMaterials = new Map();
     const fallbackSlides = [];
+    let totalMaterials = 0;
 
     for (const itemXml of matchTagBlocks(feedXml, "item")) {
         const slide = parseDocswellItem(itemXml);
@@ -373,6 +476,8 @@ function parseDocswellFeed(feedXml) {
         if (!slide.materialUrl) {
             continue;
         }
+
+        totalMaterials += 1;
 
         if (slide.eventUrls.length) {
             for (const eventUrl of slide.eventUrls) {
@@ -392,6 +497,7 @@ function parseDocswellFeed(feedXml) {
     return {
         eventMaterials,
         fallbackSlides,
+        totalMaterials,
     };
 }
 
@@ -427,7 +533,41 @@ function parseQiitaFeed(feedXml) {
                 decodeXmlEntities(readTagValue(itemXml, "guid")),
         }))
         .filter((post) => post.title && post.url)
-        .slice(0, Number.isFinite(MAX_QIITA_POSTS) && MAX_QIITA_POSTS > 0 ? MAX_QIITA_POSTS : 5);
+}
+
+async function fetchQiitaPostCount() {
+    if (!QIITA_PROFILE_API_URL) {
+        return 0;
+    }
+
+    const response = await fetch(QIITA_PROFILE_API_URL, {
+        headers: {
+            "User-Agent": "Yuyanz9-README-Blog-Sync",
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error(`Qiita profile request failed: ${response.status} ${response.statusText}`.trim());
+    }
+
+    const profile = await response.json();
+    return Number.isFinite(Number(profile?.items_count)) ? Number(profile.items_count) : 0;
+}
+
+function buildQiitaCatalog(posts, totalPosts = posts.length) {
+    const maxPosts = Number.isFinite(MAX_QIITA_POSTS) && MAX_QIITA_POSTS > 0 ? MAX_QIITA_POSTS : 5;
+
+    return {
+        recentPosts: posts.slice(0, maxPosts),
+        totalPosts,
+    };
+}
+
+function createEmptyQiitaCatalog() {
+    return {
+        recentPosts: [],
+        totalPosts: 0,
+    };
 }
 
 function findFallbackMaterial(event, fallbackSlides, usedMaterialUrls) {
@@ -490,7 +630,26 @@ function createEmptyMaterialCatalog() {
     return {
         eventMaterials: new Map(),
         fallbackSlides: [],
+        totalMaterials: 0,
     };
+}
+
+function isManagedCommunityEvent(event) {
+    if (event?.managed_by_community === true) {
+        return true;
+    }
+
+    if (!CONNPASS_MANAGED_SUBDOMAIN) {
+        return false;
+    }
+
+    try {
+        const communityUrl = String(event.group?.url ?? "");
+        const parsedUrl = new URL(communityUrl);
+        return parsedUrl.hostname.split(".")[0]?.toLowerCase() === CONNPASS_MANAGED_SUBDOMAIN.toLowerCase();
+    } catch {
+        return false;
+    }
 }
 
 function buildDocswellFeedUrl() {
@@ -513,6 +672,38 @@ function buildQiitaFeedUrl() {
 
     const qiitaUsername = process.env.QIITA_USERNAME?.trim();
     return qiitaUsername ? `https://qiita.com/${encodeURIComponent(qiitaUsername)}/feed` : "";
+}
+
+function buildQiitaProfileApiUrl() {
+    const qiitaUsername = process.env.QIITA_USERNAME?.trim();
+    return qiitaUsername ? `https://qiita.com/api/v2/users/${encodeURIComponent(qiitaUsername)}` : "";
+}
+
+function buildConnpassManagedProfileUrl(page) {
+    return CONNPASS_USER_ID ? `https://connpass.com/user/${encodeURIComponent(CONNPASS_USER_ID)}/open/?page=${page}` : "";
+}
+
+async function fetchText(url, userAgent) {
+    const response = await fetch(url, {
+        headers: {
+            "User-Agent": userAgent,
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error(`Request failed: ${response.status} ${response.statusText}`.trim());
+    }
+
+    return response.text();
+}
+
+function extractLastPageNumber(html) {
+    const pageNumbers = Array.from(html.matchAll(/\?page=(\d+)/g), (match) => Number.parseInt(match[1], 10)).filter(Number.isFinite);
+    return pageNumbers.length ? Math.max(...pageNumbers) : 1;
+}
+
+function countEventCards(html) {
+    return Array.from(html.matchAll(/class="event_list vevent"/g)).length;
 }
 
 function matchTagBlocks(content, tagName) {
@@ -683,6 +874,19 @@ function sleep(ms) {
     return new Promise((resolve) => {
         setTimeout(resolve, ms);
     });
+}
+
+async function fileExists(filePath) {
+    try {
+        await access(filePath, fsConstants.F_OK);
+        return true;
+    } catch (error) {
+        if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
+            return false;
+        }
+
+        throw error;
+    }
 }
 
 main().catch((error) => {

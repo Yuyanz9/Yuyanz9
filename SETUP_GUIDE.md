@@ -44,7 +44,7 @@ git push -u origin main
 
 ### 3. Qiita RSS フィードを確認する
 
-GitHub Actions の週次ワークフローで Qiita の記事を自動取得しています。
+GitHub Actions の週次ワークフローで Qiita の記事一覧を RSS から取得し、総投稿数は Qiita ユーザー API から自動取得しています。
 
 1. ブラウザで `https://qiita.com/あなたのQiitaユーザー名/feed` にアクセスし、XML が返ってくることを確認
 2. `.github/workflows/connpass-events.yml` 内の `QIITA_USERNAME` を実際の Qiita ユーザー名に変更
@@ -58,14 +58,16 @@ QIITA_USERNAME: yuyanz
 
 ### 4. connpass API / Docswell を設定する
 
-Activity セクションは GitHub Actions から connpass API v2 と Docswell の RSS feed を参照して、週1で自動更新します。connpass では **指定したグループ（例: YonaYonaAzure Club）が管理しているイベント** を取得し、それ以外の登壇情報は **Docswell にアップした資料に含まれる connpass イベント URL** を起点に反映されます。
+Activity セクションは GitHub Actions から connpass API v2 と Docswell の RSS feed を参照して、週1で自動更新します。connpass では **指定したグループ（例: YonaYonaAzure Club）が管理しているイベント** を取得し、それ以外の登壇情報は **Docswell にアップした資料に含まれる connpass イベント URL** を起点に反映されます。About Me のイベント運営数は **connpass ユーザーページの主催イベント一覧** から自動集計します。
 
 1. connpass で API 利用申請を行い、API キーを取得する
 2. GitHub リポジトリの **Settings** → **Secrets and variables** → **Actions** に移動する
 3. **New repository secret** で `CONNPASS_API_KEY` を追加する
 4. YonaYonaAzure Club 以外のコミュニティを管理対象にしたい場合は、`.github/workflows/connpass-events.yml` 内の `CONNPASS_MANAGED_SUBDOMAIN` をその connpass サブドメインに変更する
-5. `.github/workflows/connpass-events.yml` 内の `DOCSWELL_USERNAME` を、自分が登壇資料を公開している Docswell ユーザー名に変更する
-6. 外部コミュニティでの登壇を README に載せたい場合は、Docswell の資料本文または説明文に対象 connpass イベントの URL を含める
+5. `.github/workflows/connpass-events.yml` 内の `CONNPASS_USER_ID` を、管理イベント数を集計したい connpass のユーザー ID に変更する
+6. `.github/workflows/connpass-events.yml` 内の `DOCSWELL_USERNAME` を、自分が登壇資料を公開している Docswell ユーザー名に変更する
+7. 外部コミュニティでの登壇を README に載せたい場合は、Docswell の資料本文または説明文に対象 connpass イベントの URL を含める
+8. connpass 以外の主催イベントを README に載せたい場合は、`.github/scripts/manual-events.json` にイベントを追加する
 
 > ワークフローは毎週月曜 0:00 UTC（日本時間 9:00）に実行されます。
 
@@ -86,7 +88,7 @@ Activity セクションは GitHub Actions から connpass API v2 と Docswell �
 1. リポジトリの **Actions** タブに移動
 2. 左サイドバーから「**Weekly profile refresh workflow**」を選択
 3. **Run workflow** → **Run workflow** をクリック
-4. 完了後、README.md の `BLOG-POST-LIST`、`CONNPASS-UPCOMING`、`CONNPASS-ARCHIVE` セクションが更新されていることを確認
+4. 完了後、README.md の `ABOUT-ME-STATS`、`BLOG-POST-LIST`、`CONNPASS-UPCOMING`、`CONNPASS-ARCHIVE` セクションが更新されていることを確認
 
 > 以降は毎週月曜 0:00 UTC（日本時間 9:00）に自動実行されます。
 
