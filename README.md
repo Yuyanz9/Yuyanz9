@@ -51,7 +51,7 @@
 <!-- CONNPASS-ARCHIVE:START -->
 | Date | Event | Community | 登壇資料 |
 |------|-------|-----------|------|
-| 2026-06-20 | [Microsoft Build //localhost:fukuoka](https://yonayona.connpass.com/event/395705/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
+| 2026-06-20 | [Microsoft Build //localhost:fukuoka](https://yonayona.connpass.com/event/395705/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | [資料](https://docswell.com/s/yuyanz/ZE11WQ-2026-06-28-230124) |
 | 2026-06-12 | [【Azure AIの必須機能!?】YonaYona Durable Functions Night](https://yonayona.connpass.com/event/393817/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
 | 2026-05-29 | [YonaYona Azure LT 会](https://yonayona.connpass.com/event/392577/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
 | 2026-05-15 | [YonaYona SRE Agentを学ぶ会](https://yonayona.connpass.com/event/389895/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
