@@ -9,7 +9,6 @@ const FIXTURE_FILE = process.env.CONNPASS_FIXTURE_FILE?.trim();
 const DOCSWELL_FEED_FILE = process.env.DOCSWELL_FEED_FILE?.trim();
 const MANUAL_EVENTS_FILE = process.env.MANUAL_EVENTS_FILE?.trim() || DEFAULT_MANUAL_EVENTS_FILE;
 const QIITA_FEED_FILE = process.env.QIITA_FEED_FILE?.trim();
-const MANUAL_EVENTS_FILE = process.env.MANUAL_EVENTS_FILE?.trim() || ".github/scripts/manual-events.json";
 const CONNPASS_API_KEY = process.env.CONNPASS_API_KEY?.trim();
 const CONNPASS_NICKNAME = process.env.CONNPASS_NICKNAME?.trim();
 const CONNPASS_USER_ID = process.env.CONNPASS_USER_ID?.trim();
@@ -32,17 +31,18 @@ let lastRequestAt = 0;
 
 async function main() {
     const readme = await readFile(README_PATH, "utf8");
-    const [materialCatalog, qiitaCatalog, manualEvents] = await Promise.all([
+    const [materialCatalog, qiitaCatalog, manualConfig] = await Promise.all([
         loadDocswellCatalog(),
         loadQiitaCatalog(),
-        loadManualEvents(),
+        loadManualConfig(),
     ]);
+    const manualEvents = manualConfig.events;
     const { presenterEvents, managedEvents } = FIXTURE_FILE
         ? await loadFixture(FIXTURE_FILE)
         : await fetchConnpassEvents(materialCatalog);
     const managedEventCount = await resolveManagedEventCount(managedEvents, manualEvents);
 
-    const events = attachMaterials(mergeEvents(presenterEvents, managedEvents, manualEvents), materialCatalog);
+    const events = attachMaterials(mergeEvents(presenterEvents, managedEvents, manualEvents), materialCatalog, manualConfig.materials);
     const { upcomingEvents, archivedEvents } = splitEvents(events, new Date());
     const profileStats = {
         articleCount: qiitaCatalog.totalPosts,
@@ -76,28 +76,47 @@ async function main() {
     );
 }
 
-async function loadManualEvents() {
+async function loadManualConfig() {
     const manualEventsPath = path.resolve(MANUAL_EVENTS_FILE);
 
-    try {
-        const rawConfig = await readFile(manualEventsPath, "utf8");
-        const parsedConfig = JSON.parse(rawConfig);
-        const configuredEvents = Array.isArray(parsedConfig)
-            ? parsedConfig
-            : Array.isArray(parsedConfig.manualEvents)
-              ? parsedConfig.manualEvents
-              : [];
+    if (!(await fileExists(manualEventsPath))) {
+        return {
+            events: [],
+            materials: new Map(),
+        };
+    }
 
-        return configuredEvents.map(normalizeManualEvent).filter(Boolean);
-    } catch (error) {
-        if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
-            return [];
+    const rawManualConfig = await readFile(manualEventsPath, "utf8");
+    const parsedManualConfig = JSON.parse(rawManualConfig);
+    const events = Array.isArray(parsedManualConfig)
+        ? parsedManualConfig
+        : Array.isArray(parsedManualConfig.events)
+          ? parsedManualConfig.events
+          : Array.isArray(parsedManualConfig.manualEvents)
+            ? parsedManualConfig.manualEvents
+            : [];
+    const configuredMaterials = Array.isArray(parsedManualConfig.materials)
+        ? parsedManualConfig.materials
+        : Array.isArray(parsedManualConfig.manualMaterials)
+          ? parsedManualConfig.manualMaterials
+          : [];
+    const materials = new Map();
+
+    for (const material of configuredMaterials) {
+        const eventUrl = normalizeEventUrl(material?.event_url ?? material?.eventUrl ?? material?.url ?? "");
+        const materialUrl = normalizeDocswellUrl(material?.material_url ?? material?.materialUrl ?? material?.slide_url ?? material?.slideUrl ?? "");
+
+        if (!eventUrl || !materialUrl) {
+            continue;
         }
 
-        throw new Error(
-            `Failed to load manual events from ${path.relative(process.cwd(), manualEventsPath)}: ${error instanceof Error ? error.message : String(error)}`,
-        );
+        materials.set(eventUrl, {
+            title: typeof material?.title === "string" ? material.title.trim() : "",
+            materialUrl,
+        });
     }
+
+    return { events, materials };
 }
 
 async function loadFixture(filePath) {
@@ -119,31 +138,6 @@ async function loadFixture(filePath) {
               ? parsedFixture.ownerEvents
               : [],
     };
-}
-
-async function loadManualEvents() {
-    const manualEventsPath = path.resolve(MANUAL_EVENTS_FILE);
-
-    if (!(await fileExists(manualEventsPath))) {
-        return [];
-    }
-
-    const rawManualEvents = await readFile(manualEventsPath, "utf8");
-    const parsedManualEvents = JSON.parse(rawManualEvents);
-
-    if (Array.isArray(parsedManualEvents)) {
-        return parsedManualEvents;
-    }
-
-    if (Array.isArray(parsedManualEvents.events)) {
-        return parsedManualEvents.events;
-    }
-
-    if (Array.isArray(parsedManualEvents.manualEvents)) {
-        return parsedManualEvents.manualEvents;
-    }
-
-    return [];
 }
 
 async function fetchConnpassEvents(materialCatalog) {
@@ -364,11 +358,12 @@ async function fetchConnpassManagedEventCount() {
     return totalCount;
 }
 
-function attachMaterials(events, materialCatalog) {
+function attachMaterials(events, materialCatalog, manualMaterials = new Map()) {
     const usedMaterialUrls = new Set();
 
     return events.map((event) => {
-        const directMaterial = materialCatalog.eventMaterials.get(normalizeConnpassEventUrl(event.url));
+        const manualMaterial = manualMaterials.get(normalizeEventUrl(event.url));
+        const directMaterial = manualMaterial ?? materialCatalog.eventMaterials.get(normalizeConnpassEventUrl(event.url));
         const fallbackMaterial = directMaterial
             ? null
             : findFallbackMaterial(event, materialCatalog.fallbackSlides, usedMaterialUrls);
