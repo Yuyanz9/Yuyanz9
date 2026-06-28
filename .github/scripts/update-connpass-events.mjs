@@ -24,6 +24,7 @@ const MATERIAL_EMPTY_CELL = "-";
 const DOCSWELL_FEED_URL = buildDocswellFeedUrl();
 const QIITA_FEED_URL = buildQiitaFeedUrl();
 const QIITA_PROFILE_API_URL = buildQiitaProfileApiUrl();
+const QIITA_ITEMS_API_URL = buildQiitaItemsApiUrl();
 const CONNPASS_MANAGED_PROFILE_URL = buildConnpassManagedProfileUrl(1);
 
 let lastRequestAt = 0;
@@ -208,26 +209,16 @@ async function loadQiitaCatalog() {
         return buildQiitaCatalog(parseQiitaFeed(rawFeed));
     }
 
-    if (!QIITA_FEED_URL) {
+    if (!QIITA_ITEMS_API_URL || !QIITA_PROFILE_API_URL) {
         return createEmptyQiitaCatalog();
     }
 
-    const response = await fetch(QIITA_FEED_URL, {
-        headers: {
-            "User-Agent": "Yuyanz9-README-Blog-Sync",
-        },
-    });
-
-    if (!response.ok) {
-        throw new Error(`Qiita feed request failed: ${response.status} ${response.statusText}`.trim());
-    }
-
-    const [feedXml, totalPosts] = await Promise.all([
-        response.text(),
+    const [recentPosts, totalPosts] = await Promise.all([
+        fetchQiitaRecentPosts(),
         fetchQiitaPostCount(),
     ]);
 
-    return buildQiitaCatalog(parseQiitaFeed(feedXml), totalPosts);
+    return buildQiitaCatalog(recentPosts, totalPosts);
 }
 
 async function fetchPaginatedEvents(buildUrl) {
@@ -536,22 +527,41 @@ function parseQiitaFeed(feedXml) {
 }
 
 async function fetchQiitaPostCount() {
-    if (!QIITA_PROFILE_API_URL) {
-        return 0;
+    const profile = await fetchQiitaJson(QIITA_PROFILE_API_URL, "Qiita profile");
+    return Number.isFinite(Number(profile?.items_count)) ? Number(profile.items_count) : 0;
+}
+
+async function fetchQiitaRecentPosts() {
+    const items = await fetchQiitaJson(QIITA_ITEMS_API_URL, "Qiita items");
+
+    if (!Array.isArray(items)) {
+        throw new Error("Qiita items response was not an array.");
     }
 
-    const response = await fetch(QIITA_PROFILE_API_URL, {
+    return items
+        .map((item) => ({
+            title: typeof item?.title === "string" ? item.title : "",
+            url: typeof item?.url === "string" ? item.url : "",
+        }))
+        .filter((post) => post.title && post.url);
+}
+
+async function fetchQiitaJson(url, label) {
+    if (!url) {
+        throw new Error(`Missing ${label} URL.`);
+    }
+
+    const response = await fetch(url, {
         headers: {
             "User-Agent": "Yuyanz9-README-Blog-Sync",
         },
     });
 
     if (!response.ok) {
-        throw new Error(`Qiita profile request failed: ${response.status} ${response.statusText}`.trim());
+        throw new Error(`${label} request failed: ${response.status} ${response.statusText}`.trim());
     }
 
-    const profile = await response.json();
-    return Number.isFinite(Number(profile?.items_count)) ? Number(profile.items_count) : 0;
+    return response.json();
 }
 
 function buildQiitaCatalog(posts, totalPosts = posts.length) {
@@ -677,6 +687,14 @@ function buildQiitaFeedUrl() {
 function buildQiitaProfileApiUrl() {
     const qiitaUsername = process.env.QIITA_USERNAME?.trim();
     return qiitaUsername ? `https://qiita.com/api/v2/users/${encodeURIComponent(qiitaUsername)}` : "";
+}
+
+function buildQiitaItemsApiUrl() {
+    const qiitaUsername = process.env.QIITA_USERNAME?.trim();
+    const perPage = Number.isFinite(MAX_QIITA_POSTS) && MAX_QIITA_POSTS > 0 ? MAX_QIITA_POSTS : 5;
+    return qiitaUsername
+        ? `https://qiita.com/api/v2/users/${encodeURIComponent(qiitaUsername)}/items?page=1&per_page=${perPage}`
+        : "";
 }
 
 function buildConnpassManagedProfileUrl(page) {

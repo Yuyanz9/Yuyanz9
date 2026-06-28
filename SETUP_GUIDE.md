@@ -44,7 +44,7 @@ git push -u origin main
 
 ### 3. Qiita RSS フィードを確認する
 
-GitHub Actions の週次ワークフローで Qiita の記事一覧を RSS から取得し、総投稿数は Qiita ユーザー API から自動取得しています。
+GitHub Actions の週次ワークフローで Qiita の記事一覧と総投稿数を Qiita API から自動取得しています。
 
 1. ブラウザで `https://qiita.com/あなたのQiitaユーザー名/feed` にアクセスし、XML が返ってくることを確認
 2. `.github/workflows/connpass-events.yml` 内の `QIITA_USERNAME` を実際の Qiita ユーザー名に変更
