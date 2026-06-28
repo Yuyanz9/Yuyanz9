@@ -22,6 +22,9 @@
   <img alt="GitHub Copilot" src="https://img.shields.io/badge/GitHub%20Copilot-000000?style=flat-square&logo=githubcopilot&logoColor=white" />
   <img alt="GitHub" src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" />
   <img alt="Git" src="https://img.shields.io/badge/Git-F05032?style=flat-square&logo=git&logoColor=white" />
+  <img alt="ExpressRoute" src="https://img.shields.io/badge/ExpressRoute-0078D4?style=flat-square&logo=microsoftazure&logoColor=white" />
+  <img alt="Azure Firewall" src="https://img.shields.io/badge/Azure%20Firewall-0078D4?style=flat-square&logo=microsoftazure&logoColor=white" />
+  <img alt="NW" src="https://img.shields.io/badge/NW-0078D4?style=flat-square&logo=microsoftazure&logoColor=white" />
   <img alt="Windows Server" src="https://img.shields.io/badge/Windows%20Server-0078D6?style=flat-square&logo=windows&logoColor=white" />
   <img alt="Entra ID" src="https://img.shields.io/badge/Entra%20ID-0078D4?style=flat-square&logo=microsoftazure&logoColor=white" />
   <img alt="PowerShell" src="https://img.shields.io/badge/PowerShell-5391FE?style=flat-square&logo=powershell&logoColor=white" />
