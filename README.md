@@ -41,7 +41,7 @@
 #### 📚 Recent Archive
 
 <!-- CONNPASS-ARCHIVE:START -->
-| Date | Event | Community | 資料 |
+| Date | Event | Community | 登壇資料 |
 |------|-------|-----------|------|
 | 2026-06-20 | [Microsoft Build //localhost:fukuoka](https://yonayona.connpass.com/event/395705/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
 | 2026-06-12 | [【Azure AIの必須機能!?】YonaYona Durable Functions Night](https://yonayona.connpass.com/event/393817/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |

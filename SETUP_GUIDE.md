@@ -71,6 +71,20 @@ Activity セクションは GitHub Actions から connpass API v2 と Docswell �
 
 > ワークフローは毎週月曜 0:00 UTC（日本時間 9:00）に実行されます。
 
+`manual-events.json` に追加したイベントは、週次更新でも README の Upcoming / Archive に残ります。
+
+```json
+[
+  {
+    "title": "YonaYona Azure Clubへようこそ！",
+    "url": "https://aidevday.com/sessions/yonayona-azure-club",
+    "startedAt": "2026-07-24T13:30:00+09:00",
+    "communityTitle": "AI Dev Day 2026",
+    "communityUrl": "https://aidevday.com/"
+  }
+]
+```
+
 ---
 
 ### 5. GitHub Actions の権限を設定する
