@@ -2,14 +2,13 @@
   "events": [
     {
       "id": 202607241330,
-      "managed_by_community": true,
-      "title": "YonaYona Azure Clubへようこそ！",
-      "url": "https://aidevday.com/sessions/yonayona-azure-club",
+      "title": "AI Dev Day 2026",
+      "url": "https://azureai.connpass.com/event/393431/",
       "started_at": "2026-07-24T13:30:00+09:00",
       "updated_at": "2026-06-25T23:44:52+09:00",
       "group": {
-        "title": "YonaYona Azure Club",
-        "url": "https://yonayona.connpass.com/"
+        "title": "Azure AI Developers Community(JP)",
+        "url": "https://azureai.connpass.com/"
       }
     }
   ]
