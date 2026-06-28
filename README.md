@@ -17,10 +17,13 @@
 <p>
   <img alt="Azure" src="https://img.shields.io/badge/Microsoft%20Azure-0078D4?style=flat-square&logo=microsoftazure&logoColor=white" />
   <img alt="Azure Virtual Desktop" src="https://img.shields.io/badge/Azure%20Virtual%20Desktop-0078D4?style=flat-square&logo=windows&logoColor=white" />
-  <img alt="Microsoft 365" src="https://img.shields.io/badge/Microsoft%20365-D83B01?style=flat-square&logo=microsoft&logoColor=white" />
+  <img alt="Microsoft 365" src="https://img.shields.io/badge/Microsoft%20365-0078D4?style=flat-square&logo=microsoft&logoColor=white" />
+  <img alt="M365 Copilot" src="https://img.shields.io/badge/M365%20Copilot-0078D4?style=flat-square&logo=microsoft&logoColor=white" />
+  <img alt="GitHub Copilot" src="https://img.shields.io/badge/GitHub%20Copilot-000000?style=flat-square&logo=githubcopilot&logoColor=white" />
+  <img alt="GitHub" src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" />
+  <img alt="Git" src="https://img.shields.io/badge/Git-F05032?style=flat-square&logo=git&logoColor=white" />
   <img alt="Windows Server" src="https://img.shields.io/badge/Windows%20Server-0078D6?style=flat-square&logo=windows&logoColor=white" />
   <img alt="Entra ID" src="https://img.shields.io/badge/Entra%20ID-0078D4?style=flat-square&logo=microsoftazure&logoColor=white" />
-  <img alt="GitHub Copilot" src="https://img.shields.io/badge/Intune-0078D4?style=flat-square&logo=microsoft&logoColor=white" />
   <img alt="PowerShell" src="https://img.shields.io/badge/PowerShell-5391FE?style=flat-square&logo=powershell&logoColor=white" />
   <img alt="Bicep" src="https://img.shields.io/badge/Bicep-0078D4?style=flat-square&logo=microsoftazure&logoColor=white" />
 </p>
