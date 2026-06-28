@@ -19,6 +19,7 @@
   <img alt="Azure Virtual Desktop" src="https://img.shields.io/badge/Azure%20Virtual%20Desktop-0078D4?style=flat-square&logo=windows&logoColor=white" />
   <img alt="Microsoft 365" src="https://img.shields.io/badge/Microsoft%20365-0078D4?style=flat-square&logo=microsoft&logoColor=white" />
   <img alt="M365 Copilot" src="https://img.shields.io/badge/M365%20Copilot-0078D4?style=flat-square&logo=microsoft&logoColor=white" />
+  <img alt="Copilot Studio" src="https://img.shields.io/badge/Copilot%20Studio-0078D4?style=flat-square&logo=microsoft&logoColor=white" />
   <img alt="GitHub Copilot" src="https://img.shields.io/badge/GitHub%20Copilot-000000?style=flat-square&logo=githubcopilot&logoColor=white" />
   <img alt="GitHub" src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" />
   <img alt="Git" src="https://img.shields.io/badge/Git-F05032?style=flat-square&logo=git&logoColor=white" />
