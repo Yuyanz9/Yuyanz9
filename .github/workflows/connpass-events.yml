@@ -17,6 +17,7 @@ jobs:
       contents: write
     env:
       CONNPASS_MANAGED_SUBDOMAIN: yonayona
+      CONNPASS_USER_ID: yuya140
       DOCSWELL_USERNAME: yuyanz
       QIITA_USERNAME: yuyanz
     steps:
