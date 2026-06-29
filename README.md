@@ -90,8 +90,6 @@
 | 2025-05-14 | [Serverless LT初心者向け LT大会 #54](https://serverlesslt.connpass.com/event/351923/) | [Serverless LT初心者向け](https://serverlesslt.connpass.com/) | [資料](https://docswell.com/s/yuyanz/5WWQDY-cloud-beginner) |
 <!-- CONNPASS-ARCHIVE:END -->
 
-➡️ [過去の活動一覧はこちら](https://yuyanz9.github.io/archives/)
-
 ---
 
 ### 📝 Recent Blog Posts
