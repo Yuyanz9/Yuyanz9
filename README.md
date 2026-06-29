@@ -40,7 +40,13 @@
 <!-- CONNPASS-UPCOMING:START -->
 | Date | Event | Community |
 |------|-------|-----------|
+| 2026-06-30 | [YonaYona Infra Night](https://yonayona.connpass.com/event/395805/) | [YonaYona Azure Club](https://yonayona.connpass.com/) |
+| 2026-07-10 | [AI駆動開発勉強会 福岡出張版+ EnjoyAIDeveloping](https://enjoy-dev-ai.connpass.com/event/397844/) | [Enjoy AI Developing！](https://enjoy-dev-ai.connpass.com/) |
+| 2026-07-14 | [ゆるよな Gh-CUG #03](https://gh-cug.connpass.com/event/395707/) | [GitHub Copilot User Group Japan](https://gh-cug.connpass.com/) |
+| 2026-07-16 | [YonaYona Build Update  Night](https://yonayona.connpass.com/event/396467/) | [YonaYona Azure Club](https://yonayona.connpass.com/) |
 | 2026-07-24 | [AI Dev Day 2026](https://aidevday.com/sessions/yonayona-azure-club) | [Azure AI Developers Community(JP)](https://azureai.connpass.com/) |
+| 2026-07-28 | [ゆるよな Gh-CUG #04](https://gh-cug.connpass.com/event/398599/) | [GitHub Copilot User Group Japan](https://gh-cug.connpass.com/) |
+| 2026-08-27 | [【YonaAz in 大阪】 AI × VDI Meetup](https://yonayona.connpass.com/event/397871/) | [YonaYona Azure Club](https://yonayona.connpass.com/) |
 <!-- CONNPASS-UPCOMING:END -->
 
 #### 📚 Recent Archive
