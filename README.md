@@ -40,7 +40,6 @@
 <!-- CONNPASS-UPCOMING:START -->
 | Date | Event | Community |
 |------|-------|-----------|
-| 2026-06-30 | [YonaYona Infra Night](https://yonayona.connpass.com/event/395805/) | [YonaYona Azure Club](https://yonayona.connpass.com/) |
 | 2026-07-10 | [AI駆動開発勉強会 福岡出張版+ EnjoyAIDeveloping](https://enjoy-dev-ai.connpass.com/event/397844/) | [Enjoy AI Developing！](https://enjoy-dev-ai.connpass.com/) |
 | 2026-07-14 | [ゆるよな Gh-CUG #03](https://gh-cug.connpass.com/event/395707/) | [GitHub Copilot User Group Japan](https://gh-cug.connpass.com/) |
 | 2026-07-16 | [YonaYona Build Update  Night](https://yonayona.connpass.com/event/396467/) | [YonaYona Azure Club](https://yonayona.connpass.com/) |
@@ -54,6 +53,7 @@
 <!-- CONNPASS-ARCHIVE:START -->
 | Date | Event | Community | 資料 |
 |------|-------|-----------|------|
+| 2026-06-30 | [YonaYona Infra Night](https://yonayona.connpass.com/event/395805/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
 | 2026-06-23 | [ゆるよな Gh-CUG #02](https://gh-cug.connpass.com/event/392497/) | [GitHub Copilot User Group Japan](https://gh-cug.connpass.com/) | - |
 | 2026-06-20 | [Microsoft Build //localhost:fukuoka](https://yonayona.connpass.com/event/395705/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | [資料](https://docswell.com/s/yuyanz/ZE11WQ-2026-06-28-230124) |
 | 2026-06-20 | [Microsoft Build //localhost:fukuoka](https://fukuoka-mcp.connpass.com/event/395661/) | [Fukuoka MCP Community](https://fukuoka-mcp.connpass.com/) | - |
