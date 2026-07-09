@@ -31,6 +31,7 @@ let lastRequestAt = 0;
 
 async function main() {
     const readme = await readFile(README_PATH, "utf8");
+    const existingReadmeEvents = parseExistingReadmeEvents(readme);
     const [materialCatalog, qiitaCatalog, manualConfig] = await Promise.all([
         loadDocswellCatalog(),
         loadQiitaCatalog(),
@@ -43,7 +44,12 @@ async function main() {
         : await fetchConnpassEvents(materialCatalog, managedProfileSnapshot);
     const managedEventCount = resolveManagedEventCount(managedEvents, manualEvents, managedProfileSnapshot);
 
-    const events = attachMaterials(mergeEvents(presenterEvents, managedEvents, manualEvents), materialCatalog, manualConfig.materials);
+    const syncedEvents = mergeEvents(presenterEvents, managedEvents, manualEvents);
+    const events = attachMaterials(
+        mergeNormalizedEvents(existingReadmeEvents, syncedEvents),
+        materialCatalog,
+        manualConfig.materials,
+    );
     const { upcomingEvents, archivedEvents } = splitEvents(events, new Date());
     const profileStats = {
         articleCount: qiitaCatalog.totalPosts,
@@ -387,10 +393,108 @@ function attachMaterials(events, materialCatalog, manualMaterials = new Map()) {
 
         return {
             ...event,
-            materialTitle: material?.title ?? "",
-            materialUrl: material?.materialUrl ?? "",
+            materialTitle: material?.title ?? event.materialTitle ?? "",
+            materialUrl: material?.materialUrl ?? event.materialUrl ?? "",
         };
     });
+}
+
+function parseExistingReadmeEvents(readme) {
+    return mergeNormalizedEvents(
+        parseReadmeEventTable(extractSectionContent(readme, "CONNPASS-UPCOMING"), "upcoming"),
+        parseReadmeEventTable(extractSectionContent(readme, "CONNPASS-ARCHIVE"), "archive"),
+    );
+}
+
+function extractSectionContent(content, tagName) {
+    const markerPattern = new RegExp(`<!-- ${escapeRegExp(tagName)}:START -->([\\s\\S]*?)<!-- ${escapeRegExp(tagName)}:END -->`);
+    const match = markerPattern.exec(content);
+    return match?.[1] ?? "";
+}
+
+function parseReadmeEventTable(sectionContent, sectionType) {
+    return sectionContent
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter((line) => line.startsWith("|"))
+        .filter((line) => !/^\|[-\s|]+\|$/.test(line))
+        .filter((line) => !line.includes("| Date | Event | Community"))
+        .map((line) => parseReadmeEventRow(line, sectionType))
+        .filter(Boolean);
+}
+
+function parseReadmeEventRow(row, sectionType) {
+    const cells = splitMarkdownTableRow(row);
+
+    if (cells.length < 3) {
+        return null;
+    }
+
+    const [dateCell, eventCell, communityCell, materialCell = ""] = cells;
+    const eventLink = parseMarkdownLink(eventCell);
+
+    if (!dateCell || !eventLink?.url || !eventLink.text) {
+        return null;
+    }
+
+    const communityLink = parseMarkdownLink(communityCell);
+    const materialLink = parseMarkdownLink(materialCell);
+
+    return {
+        id: parseConnpassEventId(eventLink.url) ?? normalizeEventUrl(eventLink.url),
+        title: eventLink.text,
+        url: eventLink.url,
+        startedAt: parseReadmeEventDate(dateCell, sectionType),
+        updatedAt: parseReadmeEventDate(dateCell, sectionType),
+        communityTitle: communityLink?.text ?? (communityCell.trim() || "-"),
+        communityUrl: communityLink?.url ?? "",
+        materialTitle: materialLink?.text ?? "",
+        materialUrl: materialLink?.url ?? "",
+    };
+}
+
+function splitMarkdownTableRow(row) {
+    const trimmedRow = row.trim().replace(/^\|/, "").replace(/\|$/, "");
+    const cells = [];
+    let current = "";
+
+    for (let index = 0; index < trimmedRow.length; index += 1) {
+        const character = trimmedRow[index];
+        const previousCharacter = index > 0 ? trimmedRow[index - 1] : "";
+
+        if (character === "|" && previousCharacter !== "\\") {
+            cells.push(current.trim());
+            current = "";
+            continue;
+        }
+
+        current += character;
+    }
+
+    if (current) {
+        cells.push(current.trim());
+    }
+
+    return cells;
+}
+
+function parseMarkdownLink(value) {
+    const match = /^\[([\s\S]+)\]\((https?:\/\/[^)\s]+)\)$/.exec(value.trim());
+
+    if (!match) {
+        return null;
+    }
+
+    return {
+        text: match[1].trim(),
+        url: match[2].trim(),
+    };
+}
+
+function parseReadmeEventDate(value, sectionType) {
+    const timeSuffix = sectionType === "upcoming" ? "T23:59:59+09:00" : "T00:00:00+09:00";
+    const parsed = Date.parse(`${value.trim()}${timeSuffix}`);
+    return Number.isNaN(parsed) ? "" : new Date(parsed).toISOString();
 }
 
 function mergeNormalizedEvents(...eventSets) {
