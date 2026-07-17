@@ -1,8 +1,8 @@
-name: Weekly profile refresh workflow
+name: README refresh workflow
 
 on:
   schedule:
-    - cron: "0 0 * * 1"
+    - cron: "0 0 */2 * *"
   workflow_dispatch:
 
 concurrency:
@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   update-profile-readme:
-    name: Update this repo's README with weekly profile content
+    name: Update this repo's README content
     runs-on: ubuntu-latest
     permissions:
       contents: write
