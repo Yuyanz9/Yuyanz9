@@ -6,7 +6,7 @@
 <!-- ABOUT-ME-STATS:START -->
 - ✍️ 記事数: **76**
 - 🎤 登壇数（登壇資料数）: **19**
-- 🤝 イベント運営数: **35**
+- 🤝 イベント運営数: **36**
 <!-- ABOUT-ME-STATS:END -->
 - 🇯🇵 Based in Japan
 
@@ -40,7 +40,6 @@
 <!-- CONNPASS-UPCOMING:START -->
 | Date | Event | Community |
 |------|-------|-----------|
-| 2026-07-24 | [AI Dev Day 2026](https://aidevday.com/sessions/yonayona-azure-club) | [Azure AI Developers Community(JP)](https://azureai.connpass.com/) |
 | 2026-07-28 | [ゆるよな Gh-CUG #04](https://gh-cug.connpass.com/event/398599/) | [GitHub Copilot User Group Japan](https://gh-cug.connpass.com/) |
 | 2026-08-27 | [【YonaAz in 大阪】 AI × VDI Meetup](https://yonayona.connpass.com/event/397871/) | [YonaYona Azure Club](https://yonayona.connpass.com/) |
 <!-- CONNPASS-UPCOMING:END -->
@@ -50,6 +49,7 @@
 <!-- CONNPASS-ARCHIVE:START -->
 | Date | Event | Community | 資料 |
 |------|-------|-----------|------|
+| 2026-07-24 | [AI Dev Day 2026](https://aidevday.com/sessions/yonayona-azure-club) | [Azure AI Developers Community(JP)](https://azureai.connpass.com/) | - |
 | 2026-07-22 | [君のアプリで世界を獲れ in 福岡 ｜「Shipaton 2026」優勝賞金1000万円](https://aid.connpass.com/event/398791/) | [AI駆動開発(AI-Driven Development)](https://aid.connpass.com/) | - |
 | 2026-07-16 | [YonaYona Build Update  Night](https://yonayona.connpass.com/event/396467/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
 | 2026-07-14 | [ゆるよな Gh-CUG #03](https://gh-cug.connpass.com/event/395707/) | [GitHub Copilot User Group Japan](https://gh-cug.connpass.com/) | - |
