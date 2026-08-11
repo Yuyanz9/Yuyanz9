@@ -5,8 +5,8 @@
 - 📝 [Qiita](https://qiita.com/yuyanz) で技術記事を執筆中
 <!-- ABOUT-ME-STATS:START -->
 - ✍️ 記事数: **76**
-- 🎤 登壇数（登壇資料数）: **19**
-- 🤝 イベント運営数: **34**
+- 🎤 登壇数（登壇資料数）: **20**
+- 🤝 イベント運営数: **39**
 <!-- ABOUT-ME-STATS:END -->
 - 🇯🇵 Based in Japan
 
@@ -58,7 +58,7 @@
 | 2026-06-30 | [YonaYona Infra Night](https://yonayona.connpass.com/event/395805/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
 | 2026-06-23 | [ゆるよな Gh-CUG #02](https://gh-cug.connpass.com/event/392497/) | [GitHub Copilot User Group Japan](https://gh-cug.connpass.com/) | - |
 | 2026-06-20 | [Microsoft Build //localhost:fukuoka](https://yonayona.connpass.com/event/395705/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | [資料](https://docswell.com/s/yuyanz/ZE11WQ-2026-06-28-230124) |
-| 2026-06-20 | [Microsoft Build //localhost:fukuoka](https://fukuoka-mcp.connpass.com/event/395661/) | [Fukuoka MCP Community](https://fukuoka-mcp.connpass.com/) | - |
+| 2026-06-20 | [Microsoft Build //localhost:fukuoka](https://fukuoka-mcp.connpass.com/event/395661/) | [Fukuoka MCP Community](https://fukuoka-mcp.connpass.com/) | [資料](https://docswell.com/s/yuyanz/ZE11WQ-2026-06-28-230124) |
 | 2026-06-19 | [Microsoft Build 2026 recap GitHub Edition at 大阪](https://gh-cug.connpass.com/event/392702/) | [GitHub Copilot User Group Japan](https://gh-cug.connpass.com/) | - |
 | 2026-06-12 | [【Azure AIの必須機能!?】YonaYona Durable Functions Night](https://yonayona.connpass.com/event/393817/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
 | 2026-05-29 | [YonaYona Azure LT 会](https://yonayona.connpass.com/event/392577/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
@@ -83,9 +83,9 @@
 | 2025-11-14 | [YonaYona Azure Beginner Talk Night](https://yonayona.connpass.com/event/372956/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
 | 2025-10-23 | [YonaYona Azure をゆるっと学ぶ会](https://yonayona.connpass.com/event/368522/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | [資料](https://docswell.com/s/yuyanz/ZPG77Q-2025-10-23-231022) |
 | 2025-10-02 | [YonaYona Azure Virtual Desktopを学ぶ会](https://yonayona.connpass.com/event/366880/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | [資料](https://docswell.com/s/yuyanz/ZM6R3G-2025-10-03-194329) |
-| 2025-09-19 | [Cursor Meetup Fukuoka](https://aiau.connpass.com/event/365360/) | [AIエージェントユーザー会（AIAU）](https://aiau.connpass.com/) | - |
 | 2025-09-26 | [YonaYona Azure ゆるっとIaC会 #初心者歓迎](https://yonayona.connpass.com/event/366185/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | [資料](https://docswell.com/s/yuyanz/KRE72N-2025-09-27-231932) |
 | 2025-09-23 | [挫折から学ぶLT大会～ありがとう、過去の自分！～](https://minna-no-monogatari.connpass.com/event/368432/) | [みんなの物語コミュニティ](https://minna-no-monogatari.connpass.com/) | [資料](https://docswell.com/s/yuyanz/Z13EG7-2025-09-23-123726) |
+| 2025-09-19 | [Cursor Meetup Fukuoka](https://aiau.connpass.com/event/365360/) | [AIエージェントユーザー会（AIAU）](https://aiau.connpass.com/) | - |
 | 2025-08-21 | [YonaYona Azure をゆるっと学ぶ会](https://yonayona.connpass.com/event/354096/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | [資料](https://docswell.com/s/yuyanz/K6ELWL-2025-08-20-235421) |
 | 2025-06-22 | [第2回 JAZUG Fukuoka ～ Azureの知識地図を語る！](https://jazug.connpass.com/event/355960/) | [JAZUG (Japan Azure User Group)](https://jazug.connpass.com/) | [資料](https://docswell.com/s/yuyanz/5Q18DR-2025-06-23-145807) |
 | 2025-06-18 | [なんでもCopilot#34「裏コパ/第2回なんコパLT大会、開幕の巻！」](https://nandemo.connpass.com/event/357941/) | [なんでもCopilot](https://nandemo.connpass.com/) | [資料](https://docswell.com/s/yuyanz/ZJ4JJ4-2025-06-18-231345) |
