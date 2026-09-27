@@ -38,9 +38,7 @@
 #### 📅 Upcoming
 
 <!-- CONNPASS-UPCOMING:START -->
-| Date | Event | Community |
-|------|-------|-----------|
-| 2026-09-26 | [Microsoft Entra ID を触って学ぶ セキュリティ 実践ハンズオン in Tokyo](https://yonayona.connpass.com/event/396158/) | [YonaYona Azure Club](https://yonayona.connpass.com/) |
+No upcoming connpass events found.
 <!-- CONNPASS-UPCOMING:END -->
 
 #### 📚 Recent Archive
@@ -48,6 +46,7 @@
 <!-- CONNPASS-ARCHIVE:START -->
 | Date | Event | Community | 資料 |
 |------|-------|-----------|------|
+| 2026-09-26 | [Microsoft Entra ID を触って学ぶ セキュリティ 実践ハンズオン in Tokyo](https://yonayona.connpass.com/event/396158/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
 | 2026-08-27 | [【YonaAz in 大阪】 AI × VDI Meetup](https://yonayona.connpass.com/event/397871/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
 | 2026-07-28 | [ゆるよな Gh-CUG #04](https://gh-cug.connpass.com/event/398599/) | [GitHub Copilot User Group Japan](https://gh-cug.connpass.com/) | - |
 | 2026-07-24 | [AI Dev Day 2026](https://aidevday.com/sessions/yonayona-azure-club) | [Azure AI Developers Community(JP)](https://azureai.connpass.com/) | - |
