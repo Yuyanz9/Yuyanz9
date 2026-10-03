@@ -6,7 +6,7 @@
 <!-- ABOUT-ME-STATS:START -->
 - ✍️ 記事数: **76**
 - 🎤 登壇数（登壇資料数）: **20**
-- 🤝 イベント運営数: **49**
+- 🤝 イベント運営数: **52**
 <!-- ABOUT-ME-STATS:END -->
 - 🇯🇵 Based in Japan
 
