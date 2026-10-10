@@ -152,7 +152,7 @@ async function fetchConnpassEvents(materialCatalog, managedProfileSnapshot = nul
         throw new Error("Missing CONNPASS_API_KEY. Configure it as a GitHub Actions secret before running this script.");
     }
 
-    const [subdomainManagedEvents, hostedManagedEvents, presenterEvents] = await Promise.all([
+    const [subdomainManagedEvents, hostedManagedEvents, groupPageEvents, presenterEvents] = await Promise.all([
         CONNPASS_MANAGED_SUBDOMAIN
             ? fetchPaginatedEvents((start) => {
                   const searchParams = new URLSearchParams({
@@ -166,11 +166,37 @@ async function fetchConnpassEvents(materialCatalog, managedProfileSnapshot = nul
               })
             : [],
         managedProfileSnapshot?.events?.length ? managedProfileSnapshot.events : [],
+        fetchConnpassManagedGroupEvents(),
         fetchEventsByUrls(Array.from(materialCatalog.eventMaterials.keys())),
     ]);
-    const managedEvents = mergeEvents(subdomainManagedEvents, hostedManagedEvents);
+    const managedEvents = mergeEvents(subdomainManagedEvents, hostedManagedEvents, groupPageEvents);
 
     return { presenterEvents, managedEvents };
+}
+
+async function fetchConnpassManagedGroupEvents() {
+    if (!CONNPASS_MANAGED_SUBDOMAIN) {
+        return [];
+    }
+
+    const firstPageHtml = await fetchText(
+        buildConnpassManagedGroupUrl(1),
+        "Yuyanz9-README-Connpass-Group-Sync",
+    );
+    const lastPage = extractLastPageNumber(firstPageHtml);
+    const pageHtmls = [firstPageHtml];
+
+    if (lastPage > 1) {
+        pageHtmls.push(
+            ...(await Promise.all(
+                Array.from({ length: lastPage - 1 }, (_, index) =>
+                    fetchText(buildConnpassManagedGroupUrl(index + 2), "Yuyanz9-README-Connpass-Group-Sync"),
+                ),
+            )),
+        );
+    }
+
+    return extractConnpassManagedEvents(pageHtmls);
 }
 
 async function fetchEventsByUrls(eventUrls) {
@@ -854,6 +880,10 @@ function buildQiitaItemsApiUrl() {
 
 function buildConnpassManagedProfileUrl(page) {
     return CONNPASS_USER_ID ? `https://connpass.com/user/${encodeURIComponent(CONNPASS_USER_ID)}/open/?page=${page}` : "";
+}
+
+function buildConnpassManagedGroupUrl(page) {
+    return `https://${encodeURIComponent(CONNPASS_MANAGED_SUBDOMAIN)}.connpass.com/event/?page=${page}`;
 }
 
 async function fetchText(url, userAgent) {

@@ -38,7 +38,11 @@
 #### 📅 Upcoming
 
 <!-- CONNPASS-UPCOMING:START -->
-No upcoming connpass events found.
+| Date | Event | Community |
+|------|-------|-----------|
+| 2026-10-17 | [GitHub Dev Days in Fukuoka](https://yonayona.connpass.com/event/406122/) | [YonaYona Azure Club](https://yonayona.connpass.com/) |
+| 2026-10-22 | [YonaAz × GH-CUG コラボ会 - GitHub Copilot Night](https://yonayona.connpass.com/event/407635/) | [YonaYona Azure Club](https://yonayona.connpass.com/) |
+| 2026-12-03 | [YonaYona Special Night with James Montemagno](https://yonayona.connpass.com/event/408643/) | [YonaYona Azure Club](https://yonayona.connpass.com/) |
 <!-- CONNPASS-UPCOMING:END -->
 
 #### 📚 Recent Archive
