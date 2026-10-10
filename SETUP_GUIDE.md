@@ -58,7 +58,7 @@ QIITA_USERNAME: yuyanz
 
 ### 4. connpass API / Docswell を設定する
 
-Activity セクションは GitHub Actions から connpass API v2 と Docswell の RSS feed を参照して、週1で自動更新します。connpass では **指定したグループ（例: YonaYonaAzure Club）が管理しているイベント** を取得し、それ以外の登壇情報は **Docswell にアップした資料に含まれる connpass イベント URL** を起点に反映されます。About Me のイベント運営数は **connpass ユーザーページの主催イベント一覧** から自動集計します。
+Activity セクションは GitHub Actions から connpass API v2、指定グループの公開イベント一覧、Docswell の RSS feed を参照して2日に1回自動更新します。connpass では **指定したグループ（例: YonaYona Azure Club）が管理しているイベント** を取得し、それ以外の登壇情報は **Docswell にアップした資料に含まれる connpass イベント URL** を起点に反映されます。About Me のイベント運営数は **connpass ユーザーページの主催イベント一覧** から自動集計します。
 
 1. connpass で API 利用申請を行い、API キーを取得する
 2. GitHub リポジトリの **Settings** → **Secrets and variables** → **Actions** に移動する
@@ -69,9 +69,9 @@ Activity セクションは GitHub Actions から connpass API v2 と Docswell �
 7. 外部コミュニティでの登壇を README に載せたい場合は、Docswell の資料本文または説明文に対象 connpass イベントの URL を含める
 8. connpass 以外の主催イベントを README に載せたい場合は、`.github/scripts/manual-events.json` にイベントを追加する
 
-> ワークフローは毎週月曜 0:00 UTC（日本時間 9:00）に実行されます。
+> ワークフローは2日に1回 0:00 UTC（日本時間 9:00）に実行されます。
 
-`manual-events.json` に追加したイベントは、週次更新でも README の Upcoming / Archive に残ります。
+`manual-events.json` に追加したイベントは、定期更新でも README の Upcoming / Archive に残ります。
 
 ```json
 [
