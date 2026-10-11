@@ -45,6 +45,16 @@
 | 2026-12-03 | [YonaYona Special Night with James Montemagno](https://yonayona.connpass.com/event/408643/) | [YonaYona Azure Club](https://yonayona.connpass.com/) |
 <!-- CONNPASS-UPCOMING:END -->
 
+### 📝 Recent Blog Posts
+
+<!-- BLOG-POST-LIST:START -->
+- [【M365 Copilot】自由にツールを使えない現場で始めるちょいRPA](https://qiita.com/yuyanz/items/5c96232d188ecfb2544b)
+- [【M365 Copilot】GitHub Copilotで気づいた「AIとの付き合い方」は、M365でも同じだった](https://qiita.com/yuyanz/items/fd44da66ebb8860d0750)
+- [【M365 Copilot】Teamsでチャットするだけで進捗管理ができた話](https://qiita.com/yuyanz/items/5d2087dd5500d0689d7e)
+- [Azure Virtual Desktop（AVD）のコストを抑える7つの方法](https://qiita.com/yuyanz/items/236df61c2b9a890c481c)
+- [【Microsoft Entra Connect】テナント名・UPN・通信要件の整理](https://qiita.com/yuyanz/items/ecb102630e0e54daaba2)
+<!-- BLOG-POST-LIST:END -->
+
 #### 📚 Recent Archive
 
 <!-- CONNPASS-ARCHIVE:START -->
@@ -94,18 +104,6 @@
 | 2025-06-18 | [なんでもCopilot#34「裏コパ/第2回なんコパLT大会、開幕の巻！」](https://nandemo.connpass.com/event/357941/) | [なんでもCopilot](https://nandemo.connpass.com/) | [資料](https://docswell.com/s/yuyanz/ZJ4JJ4-2025-06-18-231345) |
 | 2025-05-14 | [Serverless LT初心者向け LT大会 #54](https://serverlesslt.connpass.com/event/351923/) | [Serverless LT初心者向け](https://serverlesslt.connpass.com/) | [資料](https://docswell.com/s/yuyanz/5WWQDY-cloud-beginner) |
 <!-- CONNPASS-ARCHIVE:END -->
-
----
-
-### 📝 Recent Blog Posts
-
-<!-- BLOG-POST-LIST:START -->
-- [【M365 Copilot】自由にツールを使えない現場で始めるちょいRPA](https://qiita.com/yuyanz/items/5c96232d188ecfb2544b)
-- [【M365 Copilot】GitHub Copilotで気づいた「AIとの付き合い方」は、M365でも同じだった](https://qiita.com/yuyanz/items/fd44da66ebb8860d0750)
-- [【M365 Copilot】Teamsでチャットするだけで進捗管理ができた話](https://qiita.com/yuyanz/items/5d2087dd5500d0689d7e)
-- [Azure Virtual Desktop（AVD）のコストを抑える7つの方法](https://qiita.com/yuyanz/items/236df61c2b9a890c481c)
-- [【Microsoft Entra Connect】テナント名・UPN・通信要件の整理](https://qiita.com/yuyanz/items/ecb102630e0e54daaba2)
-<!-- BLOG-POST-LIST:END -->
 
 ---
 
