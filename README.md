@@ -40,7 +40,6 @@
 <!-- CONNPASS-UPCOMING:START -->
 | Date | Event | Community |
 |------|-------|-----------|
-| 2026-10-17 | [GitHub Dev Days in Fukuoka](https://yonayona.connpass.com/event/406122/) | [YonaYona Azure Club](https://yonayona.connpass.com/) |
 | 2026-10-22 | [YonaAz × GH-CUG コラボ会 - GitHub Copilot Night](https://yonayona.connpass.com/event/407635/) | [YonaYona Azure Club](https://yonayona.connpass.com/) |
 | 2026-12-03 | [YonaYona Special Night with James Montemagno](https://yonayona.connpass.com/event/408643/) | [YonaYona Azure Club](https://yonayona.connpass.com/) |
 <!-- CONNPASS-UPCOMING:END -->
@@ -60,6 +59,7 @@
 <!-- CONNPASS-ARCHIVE:START -->
 | Date | Event | Community | 資料 |
 |------|-------|-----------|------|
+| 2026-10-17 | [GitHub Dev Days in Fukuoka](https://yonayona.connpass.com/event/406122/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
 | 2026-09-26 | [Microsoft Entra ID を触って学ぶ セキュリティ 実践ハンズオン in Tokyo](https://yonayona.connpass.com/event/396158/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
 | 2026-08-27 | [【YonaAz in 大阪】 AI × VDI Meetup](https://yonayona.connpass.com/event/397871/) | [YonaYona Azure Club](https://yonayona.connpass.com/) | - |
 | 2026-07-28 | [ゆるよな Gh-CUG #04](https://gh-cug.connpass.com/event/398599/) | [GitHub Copilot User Group Japan](https://gh-cug.connpass.com/) | - |
