@@ -4,8 +4,10 @@
 - ☁️ **Azure Virtual Desktop** specialist
 - 🎖️ **Qiita Advent Calendar 完走賞** — 2回受賞
 - 📝 [Qiita](https://qiita.com/yuyanz) で技術記事を執筆中
+- 📈 **総ビュー数: 500,000突破！**
+- 👍 いいね: **600以上**
 <!-- ABOUT-ME-STATS:START -->
-- ✍️ 記事数: **76**
+- ✍️ 記事数: **77**
 - 🎤 登壇数（登壇資料数）: **20**
 - 🤝 イベント運営数: **53**
 <!-- ABOUT-ME-STATS:END -->
