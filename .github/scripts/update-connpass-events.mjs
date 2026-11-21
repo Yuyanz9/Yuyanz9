@@ -1,7 +1,8 @@
 import { constants as fsConstants } from "node:fs";
-import { access, readFile, writeFile } from "node:fs/promises";
+import { access, appendFile, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
+import { ConnpassRequestError, createConnpassRequester } from "./connpass-api.mjs";
 
 const README_PATH = path.resolve(process.env.README_PATH ?? "README.md");
 const DEFAULT_MANUAL_EVENTS_FILE = path.resolve(".github/scripts/manual-events.json");
@@ -11,13 +12,11 @@ const MANUAL_EVENTS_FILE = process.env.MANUAL_EVENTS_FILE?.trim() || DEFAULT_MAN
 const QIITA_FEED_FILE = process.env.QIITA_FEED_FILE?.trim();
 const CONNPASS_API_KEY = process.env.CONNPASS_API_KEY?.trim();
 const CONNPASS_NICKNAME = process.env.CONNPASS_NICKNAME?.trim();
-const CONNPASS_USER_ID = process.env.CONNPASS_USER_ID?.trim();
 const CONNPASS_MANAGED_SUBDOMAIN = process.env.CONNPASS_MANAGED_SUBDOMAIN?.trim();
 const MAX_QIITA_POSTS = Number.parseInt(process.env.MAX_QIITA_POSTS ?? "5", 10);
 const API_BASE_URL = "https://connpass.com/api/v2";
 const API_PAGE_SIZE = 100;
 const JST_TIME_ZONE = "Asia/Tokyo";
-const API_REQUEST_INTERVAL_MS = 1100;
 const DOCSWELL_MATCH_WINDOW_DAYS = 7;
 const MATERIAL_LINK_LABEL = "資料";
 const MATERIAL_EMPTY_CELL = "-";
@@ -25,9 +24,8 @@ const DOCSWELL_FEED_URL = buildDocswellFeedUrl();
 const QIITA_FEED_URL = buildQiitaFeedUrl();
 const QIITA_PROFILE_API_URL = buildQiitaProfileApiUrl();
 const QIITA_ITEMS_API_URL = buildQiitaItemsApiUrl();
-const CONNPASS_MANAGED_PROFILE_URL = buildConnpassManagedProfileUrl(1);
 
-let lastRequestAt = 0;
+const requestConnpassJson = createConnpassRequester(CONNPASS_API_KEY);
 
 async function main() {
     const readme = await readFile(README_PATH, "utf8");
@@ -38,11 +36,26 @@ async function main() {
         loadManualConfig(),
     ]);
     const manualEvents = manualConfig.events;
-    const managedProfileSnapshot = FIXTURE_FILE ? null : await fetchConnpassManagedProfileSnapshot();
-    const { presenterEvents, managedEvents } = FIXTURE_FILE
-        ? await loadFixture(FIXTURE_FILE)
-        : await fetchConnpassEvents(materialCatalog, managedProfileSnapshot);
-    const managedEventCount = resolveManagedEventCount(managedEvents, manualEvents, managedProfileSnapshot);
+    let connpassFailed = false;
+    let presenterEvents = [];
+    let managedEvents = [];
+    try {
+        ({ presenterEvents, managedEvents } = FIXTURE_FILE
+            ? await loadFixture(FIXTURE_FILE)
+            : await fetchConnpassEvents(materialCatalog));
+    } catch (error) {
+        if (!(error instanceof ConnpassRequestError)) {
+            throw error;
+        }
+        connpassFailed = true;
+        console.warn(`::warning::Connpass sync skipped; existing event information is preserved. ${error.message.replace(/[\r\n]/g, " ")}`);
+    }
+
+    const managedCountMatch = /イベント運営数:\s*\*\*(\d+)\*\*/u.exec(extractSectionContent(readme, "ABOUT-ME-STATS"));
+    if (!managedCountMatch) {
+        throw new Error("Cannot preserve the existing managed event count in ABOUT-ME-STATS.");
+    }
+    const managedEventCount = Number(managedCountMatch[1]);
 
     const syncedEvents = mergeEvents(presenterEvents, managedEvents, manualEvents);
     const events = attachMaterials(
@@ -74,13 +87,18 @@ async function main() {
 
     if (finalizedReadme === readme) {
         console.log("README is already up to date.");
-        return;
+    } else {
+        await writeFile(README_PATH, finalizedReadme, "utf8");
+        console.log(
+            `Updated ${path.relative(process.cwd(), README_PATH)} with ${qiitaCatalog.recentPosts.length} blog posts, ${upcomingEvents.length} upcoming events, and ${archivedEvents.length} archived events.`,
+        );
     }
 
-    await writeFile(README_PATH, finalizedReadme, "utf8");
-    console.log(
-        `Updated ${path.relative(process.cwd(), README_PATH)} with ${qiitaCatalog.recentPosts.length} blog posts, ${upcomingEvents.length} upcoming events, and ${archivedEvents.length} archived events.`,
-    );
+    if (process.env.GITHUB_OUTPUT) {
+        await appendFile(process.env.GITHUB_OUTPUT, `connpass_failed=${connpassFailed}\n`);
+    } else if (connpassFailed) {
+        process.exitCode = 1;
+    }
 }
 
 async function loadManualConfig() {
@@ -147,83 +165,48 @@ async function loadFixture(filePath) {
     };
 }
 
-async function fetchConnpassEvents(materialCatalog, managedProfileSnapshot = null) {
+async function fetchConnpassEvents(materialCatalog) {
     if (!CONNPASS_API_KEY) {
-        throw new Error("Missing CONNPASS_API_KEY. Configure it as a GitHub Actions secret before running this script.");
+        throw new ConnpassRequestError("Missing CONNPASS_API_KEY. Configure it as a GitHub Actions secret before running this script.");
     }
 
-    const [subdomainManagedEvents, hostedManagedEvents, groupPageEvents, presenterEvents] = await Promise.all([
-        CONNPASS_MANAGED_SUBDOMAIN
-            ? fetchPaginatedEvents((start) => {
-                  const searchParams = new URLSearchParams({
-                      subdomain: CONNPASS_MANAGED_SUBDOMAIN,
-                      order: "2",
-                      start: String(start),
-                      count: String(API_PAGE_SIZE),
-                  });
-
-                  return `${API_BASE_URL}/events/?${searchParams.toString()}`;
-              })
-            : [],
-        managedProfileSnapshot?.events?.length ? managedProfileSnapshot.events : [],
-        fetchConnpassManagedGroupEvents(),
-        fetchEventsByUrls(Array.from(materialCatalog.eventMaterials.keys())),
-    ]);
-    const managedEvents = mergeEvents(subdomainManagedEvents, hostedManagedEvents, groupPageEvents);
+    const managedEvents = CONNPASS_MANAGED_SUBDOMAIN
+        ? await fetchPaginatedEvents((start) => {
+              const searchParams = new URLSearchParams({
+                  subdomain: CONNPASS_MANAGED_SUBDOMAIN,
+                  order: "2",
+                  start: String(start),
+                  count: String(API_PAGE_SIZE),
+              });
+              return `${API_BASE_URL}/events/?${searchParams.toString()}`;
+          })
+        : [];
+    const presenterEvents = await fetchEventsByUrls(Array.from(materialCatalog.eventMaterials.keys()));
 
     return { presenterEvents, managedEvents };
 }
 
-async function fetchConnpassManagedGroupEvents() {
-    if (!CONNPASS_MANAGED_SUBDOMAIN) {
-        return [];
-    }
-
-    const firstPageHtml = await fetchText(
-        buildConnpassManagedGroupUrl(1),
-        "Yuyanz9-README-Connpass-Group-Sync",
-    );
-    const lastPage = extractLastPageNumber(firstPageHtml);
-    const pageHtmls = [firstPageHtml];
-
-    if (lastPage > 1) {
-        pageHtmls.push(
-            ...(await Promise.all(
-                Array.from({ length: lastPage - 1 }, (_, index) =>
-                    fetchText(buildConnpassManagedGroupUrl(index + 2), "Yuyanz9-README-Connpass-Group-Sync"),
-                ),
-            )),
-        );
-    }
-
-    return extractConnpassManagedEvents(pageHtmls);
-}
-
 async function fetchEventsByUrls(eventUrls) {
     const presenterEvents = [];
-    const seenEventIds = new Set();
+    const ids = Array.from(new Set(eventUrls.map(parseConnpassEventId).filter(Boolean)));
 
-    for (const eventUrl of eventUrls) {
-        const eventId = parseConnpassEventId(eventUrl);
-
-        if (!eventId || seenEventIds.has(eventId)) {
-            continue;
-        }
-
-        const searchParams = new URLSearchParams({
-            event_id: String(eventId),
-            count: "1",
+    for (let index = 0; index < ids.length; index += API_PAGE_SIZE) {
+        const batch = ids.slice(index, index + API_PAGE_SIZE);
+        const events = await fetchPaginatedEvents((start) => {
+            const searchParams = new URLSearchParams({
+                event_id: batch.join(","),
+                start: String(start),
+                count: String(API_PAGE_SIZE),
+            });
+            return `${API_BASE_URL}/events/?${searchParams.toString()}`;
         });
-        const payload = await requestConnpassJson(`${API_BASE_URL}/events/?${searchParams.toString()}`);
-        const event = Array.isArray(payload.events) ? payload.events[0] : null;
-
-        if (!event) {
-            console.warn(`Skipping unresolved Docswell-linked connpass event: ${eventUrl}`);
-            continue;
+        presenterEvents.push(...events);
+        const foundIds = new Set(events.map((event) => Number(event.id)));
+        for (const id of batch) {
+            if (!foundIds.has(id)) {
+                console.warn(`Skipping unresolved Docswell-linked connpass event ID: ${id}`);
+            }
         }
-
-        presenterEvents.push(event);
-        seenEventIds.add(eventId);
     }
 
     return presenterEvents;
@@ -296,36 +279,6 @@ async function fetchPaginatedEvents(buildUrl) {
     return events;
 }
 
-async function requestConnpassJson(url, retryCount = 0) {
-    const now = Date.now();
-    const waitMs = Math.max(0, API_REQUEST_INTERVAL_MS - (now - lastRequestAt));
-
-    if (waitMs > 0) {
-        await sleep(waitMs);
-    }
-
-    const response = await fetch(url, {
-        headers: {
-            "User-Agent": "Yuyanz9-README-Connpass-Sync",
-            "X-API-Key": CONNPASS_API_KEY,
-        },
-    });
-
-    lastRequestAt = Date.now();
-
-    if (response.status === 429 && retryCount < 2) {
-        await sleep(API_REQUEST_INTERVAL_MS * (retryCount + 1));
-        return requestConnpassJson(url, retryCount + 1);
-    }
-
-    if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`connpass API request failed: ${response.status} ${response.statusText} ${errorText}`.trim());
-    }
-
-    return response.json();
-}
-
 function mergeEvents(...eventGroups) {
     const mergedEvents = new Map();
 
@@ -354,52 +307,6 @@ function mergeEvents(...eventGroups) {
     }
 
     return Array.from(mergedEvents.values());
-}
-
-function countManagedEvents(managedEvents, manualEvents) {
-    return mergeEvents(managedEvents, manualEvents.filter(isManagedCommunityEvent)).length;
-}
-
-function resolveManagedEventCount(managedEvents, manualEvents, managedProfileSnapshot = null) {
-    if (managedProfileSnapshot?.count != null) {
-        return managedProfileSnapshot.count;
-    }
-
-    return countManagedEvents(managedEvents, manualEvents);
-}
-
-async function fetchConnpassManagedProfileSnapshot() {
-    if (!CONNPASS_MANAGED_PROFILE_URL) {
-        return null;
-    }
-
-    try {
-        return await loadConnpassManagedProfileSnapshot();
-    } catch (error) {
-        console.warn(`Falling back to community-managed event count: ${error instanceof Error ? error.message : String(error)}`);
-        return null;
-    }
-}
-
-async function loadConnpassManagedProfileSnapshot() {
-    const firstPageHtml = await fetchText(CONNPASS_MANAGED_PROFILE_URL, "Yuyanz9-README-Connpass-Profile-Sync");
-    const lastPage = extractLastPageNumber(firstPageHtml);
-    const pageHtmls = [firstPageHtml];
-
-    if (lastPage > 1) {
-        pageHtmls.push(
-            ...(await Promise.all(
-                Array.from({ length: lastPage - 1 }, (_, index) =>
-                    fetchText(buildConnpassManagedProfileUrl(index + 2), "Yuyanz9-README-Connpass-Profile-Sync"),
-                ),
-            )),
-        );
-    }
-
-    return {
-        count: pageHtmls.reduce((totalCount, pageHtml) => totalCount + countEventCards(pageHtml), 0),
-        events: extractConnpassManagedEvents(pageHtmls),
-    };
 }
 
 function attachMaterials(events, materialCatalog, manualMaterials = new Map()) {
@@ -825,24 +732,6 @@ function createEmptyMaterialCatalog() {
     };
 }
 
-function isManagedCommunityEvent(event) {
-    if (event?.managed_by_community === true) {
-        return true;
-    }
-
-    if (!CONNPASS_MANAGED_SUBDOMAIN) {
-        return false;
-    }
-
-    try {
-        const communityUrl = String(event.group?.url ?? "");
-        const parsedUrl = new URL(communityUrl);
-        return parsedUrl.hostname.split(".")[0]?.toLowerCase() === CONNPASS_MANAGED_SUBDOMAIN.toLowerCase();
-    } catch {
-        return false;
-    }
-}
-
 function buildDocswellFeedUrl() {
     const configuredFeedUrl = process.env.DOCSWELL_FEED_URL?.trim();
 
@@ -878,88 +767,9 @@ function buildQiitaItemsApiUrl() {
         : "";
 }
 
-function buildConnpassManagedProfileUrl(page) {
-    return CONNPASS_USER_ID ? `https://connpass.com/user/${encodeURIComponent(CONNPASS_USER_ID)}/open/?page=${page}` : "";
-}
-
-function buildConnpassManagedGroupUrl(page) {
-    return `https://${encodeURIComponent(CONNPASS_MANAGED_SUBDOMAIN)}.connpass.com/event/?page=${page}`;
-}
-
-async function fetchText(url, userAgent) {
-    const response = await fetch(url, {
-        headers: {
-            "User-Agent": userAgent,
-        },
-    });
-
-    if (!response.ok) {
-        throw new Error(`Request failed: ${response.status} ${response.statusText}`.trim());
-    }
-
-    return response.text();
-}
-
-function extractLastPageNumber(html) {
-    const pageNumbers = Array.from(html.matchAll(/\?page=(\d+)/g), (match) => Number.parseInt(match[1], 10)).filter(Number.isFinite);
-    return pageNumbers.length ? Math.max(...pageNumbers) : 1;
-}
-
-function countEventCards(html) {
-    return Array.from(html.matchAll(/class="event_list vevent"/g)).length;
-}
-
-function extractConnpassManagedEvents(pageHtmls) {
-    const events = new Map();
-
-    for (const html of pageHtmls) {
-        for (const match of html.matchAll(/<div class="event_list vevent">([\s\S]*?)<\/div>\s*<\/div>\s*<\/div>/g)) {
-            const event = parseConnpassManagedEventBlock(match[1]);
-
-            if (!event) {
-                continue;
-            }
-
-            events.set(event.id, event);
-        }
-    }
-
-    return Array.from(events.values());
-}
-
-function parseConnpassManagedEventBlock(blockHtml) {
-    const url = readRegexGroup(blockHtml, /<a class="url summary" href="(https?:\/\/[^"]+\/event\/\d+\/?)"/);
-    const title = stripHtml(readRegexGroup(blockHtml, /<a class="url summary" href="[^"]+">([\s\S]*?)<\/a>/));
-    const groupTitle = stripHtml(readRegexGroup(blockHtml, /<span class="series_title">([\s\S]*?)<\/span>/));
-    const groupUrl = readRegexGroup(blockHtml, /<span class="label_group[\s\S]*?<a href="(https?:\/\/[^"]+\.connpass\.com\/)"/);
-    const startedAtUtc = readRegexGroup(blockHtml, /<span class="value-title" title="([^"]+)"/);
-    const eventId = parseConnpassEventId(url);
-
-    if (!url || !title || !startedAtUtc || !eventId) {
-        return null;
-    }
-
-    return {
-        id: eventId,
-        title,
-        url: normalizeConnpassEventUrl(url),
-        started_at: new Date(startedAtUtc).toISOString(),
-        updated_at: new Date(startedAtUtc).toISOString(),
-        group: {
-            title: groupTitle,
-            url: groupUrl,
-        },
-    };
-}
-
 function matchTagBlocks(content, tagName) {
     const tagPattern = new RegExp(`<${escapeRegExp(tagName)}[^>]*>([\\s\\S]*?)<\\/${escapeRegExp(tagName)}>`, "gi");
     return Array.from(content.matchAll(tagPattern), (match) => match[1]);
-}
-
-function readRegexGroup(content, pattern) {
-    const match = pattern.exec(content);
-    return match?.[1]?.trim() ?? "";
 }
 
 function readTagValue(content, tagName) {
@@ -1136,12 +946,6 @@ function escapeLinkText(value) {
         .replace(/\|/g, "\\|")
         .replace(/\r?\n/g, " ")
         .trim();
-}
-
-function sleep(ms) {
-    return new Promise((resolve) => {
-        setTimeout(resolve, ms);
-    });
 }
 
 async function fileExists(filePath) {

@@ -58,16 +58,17 @@ QIITA_USERNAME: yuyanz
 
 ### 4. connpass API / Docswell を設定する
 
-Activity セクションは GitHub Actions から connpass API v2、指定グループの公開イベント一覧、Docswell の RSS feed を参照して2日に1回自動更新します。connpass では **指定したグループ（例: YonaYona Azure Club）が管理しているイベント** を取得し、それ以外の登壇情報は **Docswell にアップした資料に含まれる connpass イベント URL** を起点に反映されます。About Me のイベント運営数は **connpass ユーザーページの主催イベント一覧** から自動集計します。
+Activity セクションは GitHub Actions から connpass API v2 と Docswell の RSS feed を参照して2日に1回自動更新します。connpass では **指定したグループ（例: YonaYona Azure Club）が管理しているイベント** を取得し、それ以外の登壇情報は **Docswell にアップした資料に含まれる connpass イベント URL** を起点に反映されます。About Me のイベント運営数は既存値を保持し、自動更新しません。
 
 1. connpass で API 利用申請を行い、API キーを取得する
 2. GitHub リポジトリの **Settings** → **Secrets and variables** → **Actions** に移動する
 3. **New repository secret** で `CONNPASS_API_KEY` を追加する
 4. YonaYonaAzure Club 以外のコミュニティを管理対象にしたい場合は、`.github/workflows/connpass-events.yml` 内の `CONNPASS_MANAGED_SUBDOMAIN` をその connpass サブドメインに変更する
-5. `.github/workflows/connpass-events.yml` 内の `CONNPASS_USER_ID` を、管理イベント数を集計したい connpass のユーザー ID に変更する
-6. `.github/workflows/connpass-events.yml` 内の `DOCSWELL_USERNAME` を、自分が登壇資料を公開している Docswell ユーザー名に変更する
-7. 外部コミュニティでの登壇を README に載せたい場合は、Docswell の資料本文または説明文に対象 connpass イベントの URL を含める
-8. connpass 以外の主催イベントを README に載せたい場合は、`.github/scripts/manual-events.json` にイベントを追加する
+5. `.github/workflows/connpass-events.yml` 内の `DOCSWELL_USERNAME` を、自分が登壇資料を公開している Docswell ユーザー名に変更する
+6. 外部コミュニティでの登壇を README に載せたい場合は、Docswell の資料本文または説明文に対象 connpass イベントの URL を含める
+7. connpass 以外の主催イベントを README に載せたい場合は、`.github/scripts/manual-events.json` にイベントを追加する
+
+APIリクエストは直列に13秒以上空け、1回の実行あたり80回を上限とします。フリープランの制限はキー単位のため、同じキーを他の処理で使う場合はそれらを含む1日100回の上限と実行間隔に注意してください。connpass の取得に失敗した場合、既存イベントと運営数を保持し、他の更新を反映した後に Actions を失敗として通知します。
 
 > ワークフローは2日に1回 0:00 UTC（日本時間 9:00）に実行されます。
 
@@ -100,7 +101,7 @@ Activity セクションは GitHub Actions から connpass API v2、指定グル
 ### 6. ワークフローを初回実行する
 
 1. リポジトリの **Actions** タブに移動
-2. 左サイドバーから「**Weekly profile refresh workflow**」を選択
+2. 左サイドバーから「**README refresh workflow**」を選択
 3. **Run workflow** → **Run workflow** をクリック
 4. 完了後、README.md の `ABOUT-ME-STATS`、`BLOG-POST-LIST`、`CONNPASS-UPCOMING`、`CONNPASS-ARCHIVE` セクションが更新されていることを確認
 
@@ -149,6 +150,6 @@ README.md 最下部の以下の行を削除すると非表示になります：
 | 問題 | 対処 |
 |------|------|
 | Stats カードが表示されない | `Yuyanz9` がパブリックプロフィールか確認。プライベートリポジトリの統計は反映されません |
-| ブログ記事やイベント情報が更新されない | Actions タブで `Weekly profile refresh workflow` のエラー有無を確認。`CONNPASS_API_KEY` と Workflow permissions を再確認 |
+| ブログ記事やイベント情報が更新されない | Actions タブで `README refresh workflow` のエラー有無を確認。`CONNPASS_API_KEY`、API利用制限と Workflow permissions を再確認 |
 | バッジ画像が壊れて表示される | URL のスペースは `%20` にエンコードされているか確認 |
 | typing-svg が表示されない | [readme-typing-svg.demolab.com](https://readme-typing-svg.demolab.com) が稼働中か確認（外部サービス依存） |
