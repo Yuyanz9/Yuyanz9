@@ -1,3 +1,7 @@
+<table>
+<tr>
+<td width="50%" valign="top">
+
 ### 🧑‍💻 About Me
 
 - 🏆 **Microsoft MVP** — Azure
@@ -12,6 +16,22 @@
 - 🤝 イベント運営数: **53**
 <!-- ABOUT-ME-STATS:END -->
 - 🇯🇵 Based in Japan
+
+</td>
+<td width="50%" valign="top">
+
+### 📜 資格取得実績
+
+- GitHub Foundations
+- Microsoft Certified: Azure AI Fundamentals
+- Azure Virtual Desktop Specialty
+- Microsoft Certified: Azure Solutions Architect Expert
+- Microsoft Certified: Azure Administrator Associate
+- Microsoft Certified: Azure Fundamentals
+
+</td>
+</tr>
+</table>
 
 ---
 

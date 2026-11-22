@@ -110,6 +110,12 @@ Activity セクションは GitHub Actions から connpass API v2、指定グル
 
 ## 🎨 カスタマイズ（オプション）
 
+### About Me と資格取得実績の編集
+
+README.md の冒頭は HTML テーブルによる2列構成です。左側の About Me、右側の資格取得実績をそれぞれ編集できます。資格は名前のみを手動で追加・削除します。
+
+`<td>` と Markdown の間の空行は維持してください。`ABOUT-ME-STATS` マーカー内の記事数・登壇数・イベント運営数は自動更新されるため、資格はマーカーの外に置いてください。
+
 ### GitHub Stats カードのテーマ変更
 
 README.md 内の `theme=dark` を以下のいずれかに変更できます：
