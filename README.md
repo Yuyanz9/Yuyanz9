@@ -20,14 +20,14 @@
 </td>
 <td width="50%" valign="top">
 
-### 📜 資格取得実績
+### 📜 資格
 
 - GitHub Foundations
-- Microsoft Certified: Azure AI Fundamentals
+- Azure AI Fundamentals
 - Azure Virtual Desktop Specialty
-- Microsoft Certified: Azure Solutions Architect Expert
-- Microsoft Certified: Azure Administrator Associate
-- Microsoft Certified: Azure Fundamentals
+- Azure Solutions Architect Expert
+- Azure Administrator Associate
+- Azure Fundamentals
 
 </td>
 </tr>
