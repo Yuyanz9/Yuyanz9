@@ -1,6 +1,7 @@
 <table>
 <tr>
 <td width="50%" valign="top">
+<img align="right" width="1000" height="1" src="assets/spacer.svg" alt="" />
 
 ### 🧑‍💻 About Me
 
@@ -19,6 +20,7 @@
 
 </td>
 <td width="50%" valign="top">
+<img align="right" width="1000" height="1" src="assets/spacer.svg" alt="" />
 
 ### 📜 資格
 
@@ -28,6 +30,10 @@
 - Azure Solutions Architect Expert
 - Azure Administrator Associate
 - Azure Fundamentals
+- Tableau Desktop Specialist
+- ITIL Foundation
+- 応用情報技術者
+- 基本情報技術者
 
 </td>
 </tr>
